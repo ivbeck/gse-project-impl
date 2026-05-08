@@ -29,7 +29,7 @@ This log also serves as evidence for **AR-1.1** (Guideline Application) and **AR
 | **Original Text** | "The engine shall enforce the Blokus piece placement rules: orthogonal adjacency constraints and color continuity rules." |
 | **Ambiguity** | "Color continuity rules" is undefined. Does it mean (a) same-color pieces must connect corner-to-corner (diagonal touch required for each new placement), or (b) same-color pieces must never touch orthogonally but diagonal touch is optional? |
 | **Clarifying Question** | Must each new piece of a color touch an existing piece of the same color diagonally (corner-to-corner), or is diagonal contact merely allowed but not required? |
-| **Team Answer** | *(fill in)* |
+| **Team Answer** | Both the adjaceny constraints &  color rules are ambiguous here, as the model fetches the specific rules from its training data. For the next requirements iteration, we will add the official rules. |
 | **Status** | 🔴 Open |
 | **SPEC.md Update** | Rewrite FR-1.5 to explicitly state diagonal corner-touch requirement (or lack thereof). |
 
