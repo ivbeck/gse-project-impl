@@ -1,7 +1,7 @@
 # OWNERSHIP.md
 
 > **Team Project Ownership Table (who did what)**  
-> *Document individual contributions and responsibilities for the Blokus Game Engine project.*
+> _Document individual contributions and responsibilities for the Blokus Game Engine project._
 
 ---
 
@@ -10,25 +10,24 @@
 **Team Name:** `[Your Team Name/ID]`  
 **Project:** Blokus Game Engine (Classic + Duo)  
 **Date:** `[Last Updated Date]`  
-**Team Members:** `[Student Name 1, Student Name 2, Student Name 3, ...]`
+**Team Members:** `Iven Beck, Petar Malamov, Denis Maxheimer, Richard Plummer`
 
 ---
 
 ## Work Package Ownership
 
-| Package Name | Owner | Responsibilities | Acceptance Criteria | Evidence Links |
-|--------------|-------|------------------|---------------------|----------------|
+| Package Name     | Owner          | Responsibilities             | Acceptance Criteria              | Evidence Links                    |
+| ---------------- | -------------- | ---------------------------- | -------------------------------- | --------------------------------- |
 | `[Package Name]` | `[Owner Name]` | `[List of responsibilities]` | `[Specific acceptance criteria]` | `[Links to commits, tests, docs]` |
-
 
 ---
 
 ## Example Work Packages (for reference)
 
-| Package Name | Owner | Responsibilities | Acceptance Criteria | Evidence Links |
-|--------------|-------|------------------|---------------------|----------------|
+| Package Name    | Owner    | Responsibilities                                                              | Acceptance Criteria                                                                                                                             | Evidence Links                         |
+| --------------- | -------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | Game Board Core | `[Name]` | Implement board representation, piece placement logic, board state management | - Board can be initialized for Classic (20x20) and Duo (14x14)<br>- Pieces can be placed and removed<br>- Board state can be serialized to JSON | `[Link to commits]`, `[Link to tests]` |
-| Move Validation | `[Name]` | Implement legality checker for moves, corner-touch rule enforcement | - Legal moves are correctly identified<br>- Invalid moves are correctly rejected<br>- Edge cases handled (first move, corner touches) | `[Link to commits]`, `[Link to tests]` |
+| Move Validation | `[Name]` | Implement legality checker for moves, corner-touch rule enforcement           | - Legal moves are correctly identified<br>- Invalid moves are correctly rejected<br>- Edge cases handled (first move, corner touches)           | `[Link to commits]`, `[Link to tests]` |
 
 > **Note:** Use these as examples only. Define additional packages relevant to your team's implementation (i.e., splitting of tasks depend on team size etc.).
 
@@ -55,4 +54,4 @@
 
 ---
 
-*Template version: 1.0 | Last updated: 24 February 2026*
+_Template version: 1.0 | Last updated: 24 February 2026_

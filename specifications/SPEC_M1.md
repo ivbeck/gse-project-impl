@@ -6,9 +6,10 @@
 
 ---
 
-**Document Version:** 1.0
-**Status:** Approved Baseline
+**Document Version:** 2.0
+**Status:** Updated — Ambiguity-Resolved Baseline
 **Classification:** Academic Project Specification
+**Changelog:** AMB-01, AMB-02, AMB-04, AMB-05, AMB-06, AMB-08 resolved; official Blokus rules (Mattel BJV44) embedded into FR-1.4, FR-4.1–FR-4.4, and NFR-1.x.
 
 ---
 
@@ -20,7 +21,7 @@ This document constitutes the formal Software Requirements Specification (SRS) f
 
 ### 1.2 Scope
 
-The engine shall provide a complete implementation of the Blokus board game, including move validation, legal move enumeration, move application, state serialization, and an evaluation harness. The system shall support both human players and simple automated computer players through a minimal command-line interface. 
+The engine shall provide a complete implementation of the Blokus board game, including move validation, legal move enumeration, move application, state serialization, and an evaluation harness. The system shall support both human players and simple automated computer players through a minimal command-line interface.
 
 ### 1.3 Definitions, Acronyms, and Abbreviations
 
@@ -31,6 +32,9 @@ The engine shall provide a complete implementation of the Blokus board game, inc
 | CLI | Command Line Interface |
 | JSON | JavaScript Object Notation (state serialization format) |
 | LLM | Large Language Model |
+| Corner Square | One of the four corner cells of the board (positions (0,0), (0,19), (19,0), (19,19) on the 20×20 grid) |
+| Orthogonal Adjacency | Sharing a full edge (up, down, left, right) between two cells |
+| Diagonal Adjacency | Touching at exactly one corner point between two cells |
 
 ---
 
@@ -43,7 +47,7 @@ The engine shall provide a complete implementation of the Blokus board game, inc
 | FR-1.1 | The engine shall implement all game rules for Blokus Classic (4 players). | Mandatory |
 | FR-1.2 | The engine shall support configurable game parameters including board dimensions, player count, and starting positions to allow future extensibility. | Mandatory |
 | FR-1.3 | The engine shall maintain accurate game state including piece ownership, board occupancy, and turn progression. | Mandatory |
-| FR-1.4 | The engine shall enforce the Blokus piece placement rules: orthogonal adjacency constraints and color continuity rules. | Mandatory |
+| FR-1.4 | The engine shall enforce the following official Blokus piece placement rules (per Mattel rulebook BJV44): **(a) Corner-touch requirement:** each new piece placed by a player must touch at least one previously placed piece of the same color at a corner (diagonally), not along a side. **(b) Orthogonal prohibition:** pieces of the same color may never share an edge. **(c) Different-color contact:** there are no restrictions on how pieces of different colors may contact each other — they may share edges or corners freely. **(d) Immovability:** once a piece has been placed on the board it cannot be moved or removed. | Mandatory |
 
 ### 2.2 Interface and State Management
 
@@ -64,16 +68,16 @@ The engine shall provide a complete implementation of the Blokus board game, inc
 | FR-3.1 | The system shall support human players via CLI input. | Mandatory |
 | FR-3.2 | The system shall implement simple automated computer players with basic decision logic. | Mandatory |
 | FR-3.3 | The system shall provide an abstraction layer for player implementations to enable extensibility. | Mandatory |
-| FR-3.4 | Simple AI players shall select moves using a deterministic heuristic (e.g., largest available piece, first valid placement). | Mandatory |
+| FR-3.4 | Simple AI players shall select moves using a deterministic, situation-aware heuristic designed to improve the likelihood of winning. The heuristic shall evaluate candidate moves against the following prioritized criteria, applied in order: **(1) Maximize board coverage** — prefer the piece placement that occupies the greatest number of squares; **(2) Maximize future options** — among equally large placements, prefer the placement that creates the greatest number of new valid corner-touch points for future moves; **(3) Tie-breaking** — if multiple placements remain equal, select the lexicographically first placement by (row, column, piece ID, rotation, flip). The implemented heuristic shall be documented in the project report. | Mandatory |
 
 ### 2.4 Game Rules Implementation
 
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| FR-4.1 | The engine shall implement the complete Blokus rule book for Classic mode. | Mandatory |
-| FR-4.2 | The engine shall enforce first-move corner placement constraints for each color. | Mandatory |
-| FR-4.3 | The engine shall detect and handle game termination conditions. | Mandatory |
-| FR-4.4 | The engine shall calculate and report final scores upon game completion. | Mandatory |
+| FR-4.1 | The engine shall implement the complete Blokus rule book for Classic mode as specified in Mattel rulebook BJV44. The following rules apply: **(a) Piece set:** each of the 4 players begins with the complete set of 21 pieces (1 monomino, 1 domino, 2 trominoes, 5 tetrominoes, 12 pentominoes). **(b) Turn order:** starting from the first player, play proceeds clockwise. **(c) Pass rule:** whenever a player is unable to legally place any piece, that player must pass their turn. **(d) Simultaneous exhaustion:** the game continues until no player can place any further piece. | Mandatory |
+| FR-4.2 | The engine shall enforce first-move corner placement for each color: each player's very first piece must cover one of the four corner squares of the 20×20 board — (0,0), (0,19), (19,0), or (19,19). Each corner is exclusively assigned to one player: Blue → (0,0), Yellow → (0,19), Red → (19,19), Green → (19,0). The first-move corner rule is a special case; the general corner-touch and orthogonal-prohibition rules of FR-1.4 still apply from the second move onward. | Mandatory |
+| FR-4.3 | The engine shall detect the game termination condition: the game ends when all active players have passed consecutively in a single round (i.e., no player was able to place a piece during that round). Upon detecting termination, the engine shall: **(1)** stop accepting new move inputs; **(2)** calculate and display the final score for each player per FR-4.4; **(3)** announce the winner; **(4)** prompt all players to choose whether to start a new game or exit. | Mandatory |
+| FR-4.4 | The engine shall calculate and report final scores upon game completion using the **basic scoring scheme**: each player's score is the total number of squares remaining in their unplaced pieces (lower is better). The player with the lowest score is declared the winner. In the event of a tie, all tied players share the win. The score shall be displayed in a ranked results table via the CLI. | Mandatory |
 
 ### 2.5 Evaluation and Testing
 
@@ -90,11 +94,13 @@ The engine shall provide a complete implementation of the Blokus board game, inc
 
 ### 3.1 Performance Requirements
 
+> **Reference Environment:** All performance targets below are defined relative to a standard-issue modern laptop (e.g., a consumer-grade machine with a multi-core CPU ≥ 2.0 GHz, ≥ 8 GB RAM, SSD storage) running the supported operating systems listed in NFR-2.2. Performance measured on significantly underpowered or shared CI hardware is informative only and does not constitute a pass/fail determination.
+
 | ID | Requirement | Target |
 |----|-------------|--------|
-| NFR-1.1 | Move validation shall complete within 100ms for any legal position. | ≤ 100ms |
-| NFR-1.2 | Legal move enumeration shall complete within 500ms for any game state. | ≤ 500ms |
-| NFR-1.3 | State serialization and deserialization shall complete within 200ms. | ≤ 200ms |
+| NFR-1.1 | Move validation shall complete within 100ms for any legal position, measured on the reference environment. | ≤ 100ms |
+| NFR-1.2 | Legal move enumeration shall complete within 500ms for any game state, measured on the reference environment. | ≤ 500ms |
+| NFR-1.3 | State serialization and deserialization shall complete within 200ms, measured on the reference environment. | ≤ 200ms |
 
 ### 3.2 Portability Requirements
 
@@ -115,7 +121,7 @@ The engine shall provide a complete implementation of the Blokus board game, inc
 ## 4. System Constraints
 
 | ID | Constraint | Rationale |
-|----|------------|-----------|
+|----|------------|-----------| 
 | SC-1 | The system shall use JSON for all state serialization and deserialization. | Ensures interoperability and human readability for testing. |
 | SC-2 | The system shall operate without network connectivity. | Offline operation is required for controlled academic evaluation. |
 | SC-3 | The system shall provide reproducible build and execution via scripts. | Academic evaluation requires deterministic reproducibility. |
@@ -132,21 +138,23 @@ Deliver a fully functional Blokus Classic implementation (4 players) establishin
 
 | ID | Deliverable | Acceptance Criteria |
 |----|-------------|---------------------|
-| D-1 | Legality Checker | Correctly validates all piece placements per Blokus rules |
+| D-1 | Legality Checker | Correctly validates all piece placements per Blokus rules (FR-1.4, FR-4.1, FR-4.2) |
 | D-2 | Move Application | Successfully applies legal moves and updates game state |
 | D-3 | State Serialization | Full round-trip JSON serialization/deserialization |
 | D-4 | Core Rule Tests | Automated tests covering key rules and state transformations |
-| D-5 | CLI Interface | Functional command-line interface for game play |
+| D-5 | CLI Interface | Functional command-line interface for game play including post-game replay prompt |
 | D-6 | Player Implementation | Human and simple computer player implementations |
 
 ### 5.3 Acceptance Criteria
 
 1. All 21 Blokus pieces (per color) shall be correctly represented and placeable.
-2. The legality checker shall enforce orthogonal adjacency constraints.
-3. The legality checker shall enforce color continuity rules.
-4. State serialization shall preserve complete game state across round-trip operations.
-5. The automated test suite shall achieve ≥90% coverage of core game logic.
-6. The system shall correctly detect game termination and calculate final scores.
+2. The legality checker shall enforce the orthogonal adjacency prohibition (same-color pieces may never share an edge).
+3. The legality checker shall enforce the corner-touch (diagonal) requirement: each new piece must touch at least one same-color piece diagonally.
+4. The legality checker shall enforce first-move corner placement: each player's first piece must cover their assigned board corner.
+5. State serialization shall preserve complete game state across round-trip operations.
+6. The automated test suite shall achieve ≥90% coverage of core game logic.
+7. The system shall correctly detect game termination (all players passing in a round) and calculate final scores using the basic scoring scheme (lowest remaining squares wins).
+8. Upon game termination, the system shall display final scores, announce the winner, and prompt players to replay or exit.
 
 ---
 
@@ -180,7 +188,7 @@ The final project report shall explicitly disclose:
 
 | ID | Requirement | Description |
 |----|-------------|-------------|
-| IR-1.1 | Version Control | Git repository with structured branching strategy |
+| IR-1.1 | Version Control | Git repository using a feature-branch strategy: create a dedicated branch per feature being implemented; merge completed feature branches into `main` via pull request; delete feature branches after successful merge. | 
 | IR-1.2 | Build Scripts | Reproducible installation scripts |
 | IR-1.3 | Test Scripts | Automated test execution scripts |
 | IR-1.4 | Run Scripts | Application execution scripts |
@@ -207,7 +215,7 @@ The final project report shall explicitly disclose:
 The following features are explicitly excluded from the project requirements:
 
 | ID | Exclusion | Rationale |
-|----|-----------|-----------|
+|----|-----------|-----------| 
 | EX-1 | Heavy Graphical User Interface | Out of scope; CLI is the mandated interface |
 | EX-2 | Strong AI Opponents | Out of scope; simple heuristic players only |
 | EX-3 | Online Multiplayer | Out of scope; local play only |
@@ -223,7 +231,7 @@ The following features are explicitly excluded from the project requirements:
 | FR-3.1 – FR-3.4 | Baseline | Player interaction tests |
 | FR-4.1 – FR-4.4 | Baseline | Automated unit tests |
 | FR-5.1 – FR-5.4 | Baseline | Test suite execution |
-| NFR-1.1 – NFR-1.3 | Baseline | Performance benchmark tests |
+| NFR-1.1 – NFR-1.3 | Baseline | Performance benchmark tests on reference environment |
 | NFR-2.1 – NFR-3.2 | Baseline | Code review and architectural inspection |
 | AR-1.1 – AR-2.3 | Report | Final project report |
 

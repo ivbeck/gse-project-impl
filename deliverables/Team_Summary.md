@@ -1,7 +1,7 @@
 # Team_Summary.md
 
 > **Team Project Summary**  
-> *1-2 page overview of your team's project, AI usage, and key results.*
+> _1-2 page overview of your team's project, AI usage, and key results._
 
 ---
 
@@ -9,7 +9,7 @@
 
 **Team Name:** `[Your Team Name/ID]`  
 **Project:** Blokus Game Engine (Classic + Duo)  
-**Team Members:** `[Student Name 1, Student Name 2, Student Name 3, ...]`
+**Team Members:** `Iven Beck, Petar Malamov, Denis Maxheimer, Richard Plummer`
 
 ---
 
@@ -41,29 +41,27 @@ Briefly describe the scope of your project (incldue toolkit used such as program
 
 Describe which AI tools you used and where. Be specific about the tools/models and how they were integrated into your workflow.
 
-| Phase | AI Tool/Model | Usage | Validation Method |
-|-------|---------------|-------|-------------------|
-| `[e.g., Requirements]` | `[e.g., GPT-5.2]` | `[e.g., Generate requirements from user stories]` | `[e.g., Peer review, manual verification]` |
-| `[e.g., Code Generation]` | `[e.g., GitHub Copilot (Agent)]` | `[e.g., Generate board representation code]` | `[e.g., Unit tests, manual testing]` |
-| `[e.g., Testing]` | `[e.g., Claude 4.5 Sonnet]` | `[e.g., Generate test cases]` | `[e.g., Test execution, coverage analysis]` |
-| `[e.g., Debugging]` | `[e.g., DeepSeek Coder]` | `[e.g., Debug failing tests]` | `[e.g., Manual verification, regression tests]` |
+| Phase                     | AI Tool/Model                    | Usage                                             | Validation Method                               |
+| ------------------------- | -------------------------------- | ------------------------------------------------- | ----------------------------------------------- |
+| `[e.g., Requirements]`    | `[e.g., GPT-5.2]`                | `[e.g., Generate requirements from user stories]` | `[e.g., Peer review, manual verification]`      |
+| `[e.g., Code Generation]` | `[e.g., GitHub Copilot (Agent)]` | `[e.g., Generate board representation code]`      | `[e.g., Unit tests, manual testing]`            |
+| `[e.g., Testing]`         | `[e.g., Claude 4.5 Sonnet]`      | `[e.g., Generate test cases]`                     | `[e.g., Test execution, coverage analysis]`     |
+| `[e.g., Debugging]`       | `[e.g., DeepSeek Coder]`         | `[e.g., Debug failing tests]`                     | `[e.g., Manual verification, regression tests]` |
 
 > **Note:** Use these as examples only
-
 
 ### AI Usage Policy
 
 Describe any AI usage policies, guidelines, or constraints your team followed during development. This may also include course-specific requirements, or internal team agreements.
 
-| Policy/Guideline | Description | Application |
-|------------------|-------------|-------------|
-| `[e.g., Disclosure Requirement]` | `[e.g., All AI-generated code must be clearly commented]` | `[e.g., Added `// AI-Generated: GPT-5.2` headers]` |
-| `[e.g., Citation Policy]` | `[e.g., AI contributions must be cited in README]` | `[e.g., Listed tools and outputs in `AI_USAGE.md`]` |
-| `[e.g., Human Oversight Rule]` | `[e.g., No fully autonomous code generation]` | `[e.g., All generated code reviewed before commit]` |
-| `[e.g., No Proprietary Data Use]` | `[e.g., Did not feed project code into public LLMs]` | `[e.g., Used local models or private instances]` |
+| Policy/Guideline                  | Description                                               | Application                                         |
+| --------------------------------- | --------------------------------------------------------- | --------------------------------------------------- |
+| `[e.g., Disclosure Requirement]`  | `[e.g., All AI-generated code must be clearly commented]` | `[e.g., Added `// AI-Generated: GPT-5.2` headers]`  |
+| `[e.g., Citation Policy]`         | `[e.g., AI contributions must be cited in README]`        | `[e.g., Listed tools and outputs in `AI_USAGE.md`]` |
+| `[e.g., Human Oversight Rule]`    | `[e.g., No fully autonomous code generation]`             | `[e.g., All generated code reviewed before commit]` |
+| `[e.g., No Proprietary Data Use]` | `[e.g., Did not feed project code into public LLMs]`      | `[e.g., Used local models or private instances]`    |
 
 > **Note:** Use these as examples only. Adjust based on your team's actual practices.
-
 
 ---
 
@@ -157,4 +155,4 @@ How did you update your test suite to cover both modes?
 
 ---
 
-*Template version: 1.0 | Last updated: 24 February 2026*
+_Template version: 1.0 | Last updated: 24 February 2026_
