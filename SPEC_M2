@@ -1,0 +1,98 @@
+# Change Request: Configuration Change (Duo Extension)
+
+## Blokus Configurable Game Engine (Milestone 2)
+
+---
+
+**Document Version:** 1.0
+**Target Document:** `SPEC_BASELINE.md`
+**Classification:** Academic Project Change Request
+
+---
+
+## 1. Introduction
+
+### 1.1 Purpose of Change Request
+
+This document outlines an extension to the baseline Blokus Engine specifications (Milestone 1). The goal of this change request is to extend the baseline engine to support the "Blokus Duo" variant (two-player) via configuration-driven design without fundamental architectural changes.
+
+### 1.2 Added Definitions
+
+| Term | Definition |
+|------|------------|
+| Blokus Duo | Two-player variant played on a 14×14 board |
+
+---
+
+## 2. Delta Requirements (Functional Additions)
+
+The following requirements are to be added to the base specification under Sections 2.1, 2.4, and 2.5:
+
+| ID | Sub-System | Requirement | Priority |
+|----|------------|-------------|----------|
+| FR-1.1b | Core Engine | The engine shall implement all game rules for Blokus Duo (2 players) via configuration. | Mandatory |
+| FR-4.1b | Game Rules | The engine shall implement the complete Blokus rule book for Duo mode. | Mandatory |
+| FR-5.5 | Evaluation | The evaluation harness shall be updated to support and evaluate both Classic and Duo modes. | Mandatory |
+
+---
+
+## 3. Configuration Parameters
+
+The engine's configuration system must support the following deltas to switch successfully between Classic and Duo modes:
+
+| ID | Requirement | Details |
+|----|-------------|---------|
+| CR-R1 | Board Dimensions | 14×14 grid (reduced from 20×20) |
+| CR-R2 | Player Count | 2 players (reduced from 4) |
+| CR-R3 | Starting Corners | Duo-specific corner positions (diagonal symmetry at grid offset) |
+| CR-R4 | Piece Subset | 21 pieces per player (same as Classic) |
+
+---
+
+## 4. Deliverables and Acceptance Criteria (Milestone 2)
+
+### 4.1 Deliverables
+
+| ID | Deliverable | Acceptance Criteria |
+|----|-------------|---------------------|
+| M2-D1 | Duo Configuration | Engine shall initialize in Duo mode via configuration parameters |
+| M2-D2 | Adapted Legality | Legality checker shall dynamically respect Duo board boundaries |
+| M2-D3 | Updated Tests | Test suite shall be expanded to cover both Classic and Duo modes |
+| M2-D4 | Evaluation Harness Update | Harness shall evaluate engine correctness and metrics in both modes |
+
+### 4.2 Acceptance Criteria
+
+1. The engine shall switch between Classic and Duo modes strictly via configuration parameters (no hardcoded modes).
+2. Configuration-driven design shall minimize code changes when switching between game modes; no code duplication shall occur between Classic and Duo implementations.
+3. The test suite shall validate both game modes utilizing shared test infrastructure.
+4. The evaluation harness shall generate mode-specific performance metrics.
+
+---
+
+## 5. Academic Reporting Constraints (Evolution Case Study)
+
+*This section supplements Section 6 of the baseline SRS.*
+
+The final project report shall treat the Milestone 1 to Milestone 2 transition as a **requirements evolution case study**, analyzing how the codebase adapted to the change request:
+
+| ID | Requirement | Description |
+|----|-------------|-------------|
+| AR-3.1 | Breaking Points | Identify requirements/architectural choices from M1 that broke or required modification |
+| AR-3.2 | LLM Suggestions | Document recommendations provided by LLM assistants in handling this change request |
+| AR-3.3 | Applied Solutions | Report actual implementation approaches that succeeded in addressing the configuration extension |
+| AR-3.4 | Friction Analysis | Quantify the effort delta between expected and actual changes required for the extension |
+
+---
+
+## 6. Traceability Updates
+
+| Requirement ID | Milestone | Validation Method |
+|----------------|-----------|-------------------|
+| FR-1.1b, FR-4.1b | M2 (Change Request) | Configuration-based validation |
+| CR-R1 – CR-R4 | M2 (Change Request) | Automated unit & integration tests |
+| FR-5.5 | M2 (Change Request) | Test suite & Harness execution |
+| AR-3.1 – AR-3.4 | Report Extension | Final project report |
+
+---
+
+**End of Change Request**
