@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "title": "Guideline 3 Application — Ambiguity Detection on SPEC.md",
+    "course": "Generative Software Engineering",
+    "date": "2026-05-10",
+    "purpose": "Proof of applying Guideline 3: Proactively Detect and Resolve Ambiguity Through Clarification",
+    "artifact_produced": "AMBIGUITY_LOG.md"
+  },
+  "conversation": [
+    {
+      "turn": 1,
+      "role": "user",
+      "content": "for a generative software engineering course, we have to implement a game. But before we do that via code, we need to apply guideline packages from all groups within the class. One guideline that i need to implement is:\n\n### Guideline 3: Proactively Detect and Resolve Ambiguity Through Clarification\n[...]\n\nWhat i dont understand is where i should apply this. My team and i made a requirements.md file that has the requirements. do i apply this guideline on that or on the first \"requirement\" from the professor about the task?"
+    },
+    {
+      "turn": 2,
+      "role": "assistant",
+      "content": "Explained that Guideline 3 applies at both stages: (1) upstream on the professor's task description to catch ambiguities before writing requirements, and (2) downstream on the requirements.md as a validation pass. Described the intended flow: professor task → LLM flags ambiguities → Q&A clarification → requirements.md → review pass → finalized requirements → code. Recommended applying it now to requirements.md as a review pass since it already exists."
+    },
+    {
+      "turn": 3,
+      "role": "user",
+      "content": "okay since we already have requirements, just apply the guideline to it right?"
+    },
+    {
+      "turn": 4,
+      "role": "assistant",
+      "content": "Confirmed. Asked the user to share their requirements file to begin the ambiguity scan."
+    },
+    {
+      "turn": 5,
+      "role": "user",
+      "content": "[Uploaded SPEC.md — Software Requirements Specification for the Blokus Configurable Game Engine, v1.0]"
+    },
+    {
+      "turn": 6,
+      "role": "assistant",
+      "content": "Scanned the SPEC.md and flagged the first ambiguity as a demonstration of the guideline:\n\nAMB-01 — FR-1.5: 'Color continuity rules' is undefined. Asked: Must each new piece touch an existing piece of the same color diagonally (corner-to-corner), or is diagonal contact merely allowed but not required?"
+    },
+    {
+      "turn": 7,
+      "role": "user",
+      "content": "this is something that i will need to discuss with my team, what is the next best step? create another file with edits?"
+    },
+    {
+      "turn": 8,
+      "role": "assistant",
+      "content": "Recommended creating a separate AMBIGUITY_LOG.md file rather than editing SPEC.md immediately. Rationale: keeps a record of the clarification process, allows async team discussion, and doubles as evidence for AR-1.1 and AR-1.2 in the final report. Asked if the user wanted the full spec scanned and the log generated."
+    },
+    {
+      "turn": 9,
+      "role": "user",
+      "content": "okay can you create exactly that for that spec md"
+    },
+    {
+      "turn": 10,
+      "role": "assistant",
+      "content": "Performed a full scan of SPEC.md and produced AMBIGUITY_LOG.md containing 10 flagged ambiguities:\n\n1. AMB-01 — FR-1.5: Definition of 'color continuity rules'\n2. AMB-02 — FR-3.4: Which AI heuristic is actually required\n3. AMB-03 — FR-4.3: What 'corner placement' means in Duo mode\n4. AMB-04 — FR-4.4: What 'handle' means after game termination\n5. AMB-05 — FR-4.5: Whether official Blokus scoring bonuses apply\n6. AMB-06 — NFR-1.x: No reference hardware defined for performance targets\n7. AMB-07 — M1-AC-5: 'Core game logic' and coverage metric undefined\n8. AMB-08 — M2-R3: Exact Duo starting coordinates never specified\n9. AMB-09 — M2-AC-2: 'No code duplication' is too absolute\n10. AMB-10 — IR-1.1: 'Structured branching strategy' is undefined\n\nEach entry includes the original text, the ambiguity, a clarifying question, a Team Answer field, status, and a note on how to update SPEC.md."
+    },
+    {
+      "turn": 11,
+      "role": "user",
+      "content": "create a json file for the chat history please"
+    },
+    {
+      "turn": 12,
+      "role": "assistant",
+      "content": "Asked for clarification: did the user mean this full conversation, or the Q&A resolutions from the ambiguity log?"
+    },
+    {
+      "turn": 13,
+      "role": "user",
+      "content": "this conversation as proof for my professor"
+    },
+    {
+      "turn": 14,
+      "role": "assistant",
+      "content": "Generated this chat_history.json file as a structured record of the full conversation for academic submission."
+    }
+  ],
+  "guideline_applied": {
+    "name": "Guideline 3: Proactively Detect and Resolve Ambiguity Through Clarification",
+    "steps_demonstrated": [
+      "Identified that the requirements file (SPEC.md) was the appropriate target for the guideline",
+      "Scanned SPEC.md for ambiguous natural language statements",
+      "Flagged 10 ambiguities with clarifying questions",
+      "Recommended embedding resolved answers back into SPEC.md rather than editing prematurely",
+      "Produced AMBIGUITY_LOG.md as a structured artifact for team review and academic reporting"
+    ]
+  }
+}
