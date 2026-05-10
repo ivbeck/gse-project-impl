@@ -77,7 +77,10 @@ We applied this guideline during the requirements refinement phase for both Mile
 
 - **What worked:** The model (Sonett 4.6) managed to find eight ambiguities which we didnt initally catch. In the first version of the requirements file, we wrote the following functional requirement "the engine shall calculate and report final scores upon game completion" because we believed that the model would have this data in its training corpora. However, upon reading the official rulebook of Blokus, there are different score count implemenations. We then corrected the previously written functional requirement, specifying that it be the standard scoring scheme. This way, we specify the scoring mechanic instead of relying on the model to select one of the many variations.
 - **What didn't work:** When the LLM analyzed FR-4.3: "The engine shall enforce first-move corner placement constraints for each color", it flagged it as ambiguous because "corner placement" differs between Classic and Duo mode. However, this was a false positive: SPEC_M1 exclusively covers Classic mode, so the statement was unambiguous within its own scope. The root cause was that both milestones originally lived in a single file, giving the LLM grounds to reason across them. As a corrective action, we split the specifications into two separate files (SPEC_M1 and SPEC_M2), which resolved the issue and improved our documentation structure overall.
-- **Evidence:** `[Link to prompt, code, tests, or documentation]`
+- **Evidence:**
+
+1. https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_ambiguity_log_creation_sonnet_chat.json
+2. https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_specifications_v2_sonnet.json
 
 **Reflection:**  
 Applying this guideline confirmed that LLM-assisted ambiguity detection is most valuable early in the requirements phase, before implementation assumptions harden — several of our resolutions (particularly AMB-03 and AMB-05) would have caused costly rework had they surfaced during coding. We would use it again, but with a tighter prompt that constrains the LLM to a single document's scope at a time, which would have avoided the false positive on FR-4.3 from the start.
