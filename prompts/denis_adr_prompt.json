@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "title": "Guideline 1 Application — Architecture & Design Prompt Authoring",
+    "course": "Generative Software Engineering",
+    "date": "2026-05-11",
+    "author": "Denis",
+    "purpose": "Author a reusable LLM prompt that drives the full three-phase 'Decision → Validated ADR' workflow from Guideline 1 (Architecture & Design) of the team's Design Guidelines, using the post-ambiguity Milestone 1 spec as binding input.",
+    "artifact_produced": "guidelines/ARCHITECTURE_PROMPT_v1.md",
+    "model": "claude-opus-4-7",
+    "tool": "Claude Code (VSCode extension)",
+    "inputs_referenced": [
+      "guidelines/Guidelines_Design.md",
+      "guidelines/REQUIREMENTS_PROMPT_v1.md",
+      "specifications/SPEC_M1.md",
+      "specifications/AMBIGUITY_LOG.md",
+      "README.md"
+    ]
+  },
+  "conversation": [
+    {
+      "turn": 1,
+      "role": "user",
+      "content": "Look at the Guidelines_Design.md, SPEC_M1.md and AMBIGUITY_LOG.md. Create a ARCHITECTURE_PROMPT_v1.md in guidelines/ for Guideline 1: Architecture & Design based on them.",
+      "ide_context": {
+        "opened_file": "gse-project-impl/guidelines/Guidelines_Design.md"
+      }
+    },
+    {
+      "turn": 2,
+      "role": "assistant",
+      "summary": "Read Guidelines_Design.md (Guideline 1 — three-phase ADR workflow), SPEC_M1.md (v2.0, ambiguity-resolved baseline), AMBIGUITY_LOG.md (8 closed items), the existing REQUIREMENTS_PROMPT_v1.md (to match house style), the prompts/ folder (for export-format precedent) and README.md (Design owners = Richard + Denis). Then authored guidelines/ARCHITECTURE_PROMPT_v1.md.",
+      "design_decisions": [
+        "Mirrored the structure of REQUIREMENTS_PROMPT_v1.md (Role → Context → Task → Specific Deliverables → Raw Input) for consistency across guideline-application prompts.",
+        "Encoded Guideline 1's three phases as three explicit personas within a single prompt (Solution Architect → Development Architect → Senior Reviewing Architect) so an LLM cannot collapse them into a summary.",
+        "Embedded a verbatim ADR template and a strict JSON schema for design solutions, so outputs from successive runs are structurally comparable and reviewable.",
+        "Translated the 7 closed ambiguities into a binding 'architectural implications' table — most notably AMB-07 (no code duplication → configuration-driven engine, not a Classic/Duo fork) as the strongest M2-readiness driver.",
+        "Mandated requirement traceability: every architectural decision must cite an FR-/NFR-/SC-/IR- ID; untraceable claims are explicitly rejected.",
+        "Added an explicit stop-condition list of required artifacts so an incomplete response is detectable by the human reviewer.",
+        "Required architecture to be language-neutral but expressible in both Java/Maven and Python/uv (per NFR-2.1)."
+      ],
+      "artifact": {
+        "path": "guidelines/ARCHITECTURE_PROMPT_v1.md",
+        "purpose": "Single prompt to be pasted into a state-of-the-art LLM (Guideline 4) to execute Guideline 1 end-to-end against the Milestone 1 SRS.",
+        "phases_covered": [
+          "Phase 1 — Select an Architecture (Decision Frame, ≥3 candidates, criteria comparison table, per-option ADRs, final ADR with rejection rationale)",
+          "Phase 2 — Refine into a Concrete Design (LLM role restated, 3 design solutions per architecture using GoF patterns, strict JSON output, human-review checklist, 9-row rating table, updated final ADR, Senior Architect review pass)",
+          "Phase 3 — Validate the Decision (Decision Basis Audit, quality-attribute scenarios contrasted with rejected alternatives, Drift Risk register with tripwires, Final Review Brief separating Valid / Questionable / Follow-up)"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "role": "user",
+      "content": "Export this conversation to prompts/denis_adr_prompt.json"
+    },
+    {
+      "turn": 4,
+      "role": "assistant",
+      "summary": "Wrote this JSON file (prompts/denis_adr_prompt.json) capturing the conversation, the design rationale behind ARCHITECTURE_PROMPT_v1.md, and pointers to all referenced inputs and produced artifacts. Format follows the precedent set by richard_ambiguity_log_creation_sonnet_chat.json."
+    }
+  ],
+  "downstream_usage": {
+    "intended_consumer": "A state-of-the-art LLM (per Guideline 4 — Claude Opus/Sonnet 4.5–4.6, GPT-5.2/4, or Gemini 3 Pro).",
+    "expected_outputs": [
+      "ADR-001..N (option ADRs)",
+      "Final ADR (selected architecture)",
+      "9 design-solution JSON objects (3 architectures × 3 designs)",
+      "Updated final ADR after Phase 2 selection",
+      "Quality-attribute scenario set",
+      "Drift Risk register",
+      "Final Review Brief"
+    ],
+    "human_in_the_loop": "The human architect (Richard / Denis) makes the final call. The LLM output is analytical scaffolding, not a decision."
+  }
+}
