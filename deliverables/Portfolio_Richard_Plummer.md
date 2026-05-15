@@ -109,6 +109,8 @@ I applied this guideline while designing the structural foundation for the Bloku
 
 ## 1) Initial UML Diagram:
 
+- https://github.com/ivbeck/gse-project-impl/blob/main/design/blokus_core_mermaid_uml_class_diagram_v1.html
+
 ## 2) UML Review & Scoring
 
 | #   | Criterion                    | Score | Justification                                                                                                      |
@@ -121,11 +123,15 @@ I applied this guideline while designing the structural foundation for the Bloku
 
 ## 3) Updated UML Diagramm:
 
+- https://github.com/ivbeck/gse-project-impl/blob/main/design/blokus_core_mermaid_uml_class_diagram_v2.html
+
 ## 4) Prompts & Chat History
 
-- UML design prompt:
-- UML validation prompt
-- Validation history:
+- UML design prompt: https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_prompt_1_uml_class_diagram.md
+
+- UML validation prompt: https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_prompt_2_uml_validator.md
+
+- Validation history: https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_uml_validation.json
 
 **Reflection:**  
 Applying this guideline taught me that LLMs are prone to "abstraction gaps", meaning they often describe high-level logic perfectly while forgetting to define the low-level data structures that support it. The structured scoring system forced me to look for what wasn't there, rather than just accepting what was. I would definitely use this again, especially the two-persona (Architect vs. Reviewer) approach, as it significantly reduces the risk of implementing an incomplete or structurally flawed design.
