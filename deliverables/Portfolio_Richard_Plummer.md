@@ -83,32 +83,52 @@ We applied this guideline during the requirements refinement phase for both Mile
 2. https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_specifications_v2_sonnet.json
 
 **Reflection:**  
-Applying this guideline confirmed that LLM-assisted ambiguity detection is most valuable early in the requirements phase, before implementation assumptions harden — several of our resolutions (particularly AMB-03 and AMB-05) would have caused costly rework had they surfaced during coding. We would use it again, but with a tighter prompt that constrains the LLM to a single document's scope at a time, which would have avoided the false positive on FR-4.3 from the start.
+Applying this guideline confirmed that LLM-assisted ambiguity detection is most valuable early in the requirements phase, before implementation assumptions harden. Several of our resolutions (particularly AMB-03 and AMB-05) would have caused costly rework had they surfaced during coding. We would use it again, but with a tighter prompt that constrains the LLM to a single document's scope at a time, which would have avoided the false positive on FR-4.3 from the start.
 
 ---
 
-### Application 2: `[Guideline Name]` from `[Topic]` Team
+### Application 2: `Guideline 3: UML Specification` from Design Team
 
 **Guideline Description:**  
-Briefly describe the guideline you applied.
+This guideline establishes a rigorous two-step process for generating and validating technical diagrams. It mandates that UML class diagrams must not only follow standard Mermaid syntax but must also be strictly verified against the project's Architectural Decision Records (ADRs) and Functional Requirements (FRs). The guideline focuses on maintaining a "clean" hexagonal architecture by enforcing rules such as zero dependencies from Core to Adapters and ensuring that Ports are modeled exclusively as interfaces.
 
 **Context:**  
-What task or feature were you working on when you applied this guideline?
+I applied this guideline while designing the structural foundation for the Blokus Classic game engine. Specifically, I was translating the design patterns (Strategy, Command, Builder, and Memento) and the hexagonal architecture layout defined in the ADR into a visual class diagram that could serve as a "source of truth" for the development team.
 
 **Application Process:**
 
-1. `[Step 1]`
-2. `[Step 2]`
-3. `[Step 3]`
+1. Generation (Prompt 1): I initialized the process by acting as a Senior Software Architect, providing the LLM with the full architectural context from the ADR. I mapped specific Functional Requirements (like FR-1.4 for rule enforcement and FR-4.4 for scoring) to specific core classes to ensure every piece of logic had a defined home.
+2. Critique and Scoring (Prompt 2): I then switched roles to a "Strict UML Reviewer." I applied the scoring rubric from Guideline 3, evaluating the initial draft across five dimensions: Completeness, Correctness, Standards Adherence, Comprehensibility, and Terminological Alignment.
+3. Refinement: Based on the critique, I executed a "fix-only" iteration. This involved injecting missing domain entities (like Piece, Position, and PlayerScore) and adding formal UML multiplicities (e.g., 1 to 21 for the Piece Catalog) to transition the diagram from a conceptual sketch to a precise technical specification.
 
 **Outcome:**
 
-- **What worked:** `[Description]`
-- **What didn't work:** `[Description]`
-- **Evidence:** `[Link to prompt, code, tests, or documentation]`
+- **What worked:** The "Architecture Rules to Enforce" section of the guideline was highly effective at preventing "architectural drift." By explicitly forbidding Core-to-Adapter associations, the resulting Mermaid code maintained a pure hexagonal boundary. The use of a separate validation prompt successfully caught "hallucinated" omissions where the LLM had referenced types like Position without actually defining them.
+- **What didn't work:** The initial draft lacked significant detail regarding multiplicities and relationship types (composition vs. dependency), which lowered the "Correctness" score. Additionally, the default Mermaid rendering used a dark blue background for class elements, which created a legibility issue; the white text was difficult to read against that specific shade. A darker, higher-contrast background or a custom CSS theme would be necessary for better accessibility.
+- **Evidence:**
+
+## 1) Initial UML Diagram:
+
+## 2) UML Review & Scoring
+
+| #   | Criterion                    | Score | Justification                                                                                                      |
+| :-- | :--------------------------- | :---- | :----------------------------------------------------------------------------------------------------------------- |
+| 1   | **Completeness**             | **3** | Referenced types `Piece`, `Position`, and `PlayerScore` are not defined, leaving the domain model incomplete.      |
+| 2   | **Correctness**              | **2** | **Multiplicities** are entirely missing; relationship types do not distinguish between composition and dependency. |
+| 3   | **Standards Adherence**      | **4** | Valid Mermaid syntax, though nested generics in `Map~int_List~Piece~~` can be fragile in some renderers.           |
+| 4   | **Comprehensibility**        | **5** | Excellent layout direction and clear labeling of association arrows.                                               |
+| 5   | **Terminological Alignment** | **5** | Perfectly aligns with ADR terminology (`ConfigVO`, `RuleSet`, `PieceCatalog`).                                     |
+
+## 3) Updated UML Diagramm:
+
+## 4) Prompts & Chat History
+
+- UML design prompt:
+- UML validation prompt
+- Validation history:
 
 **Reflection:**  
-What did you learn from applying this guideline? Would you use it again in a similar context?
+Applying this guideline taught me that LLMs are prone to "abstraction gaps", meaning they often describe high-level logic perfectly while forgetting to define the low-level data structures that support it. The structured scoring system forced me to look for what wasn't there, rather than just accepting what was. I would definitely use this again, especially the two-persona (Architect vs. Reviewer) approach, as it significantly reduces the risk of implementing an incomplete or structurally flawed design.
 
 ---
 

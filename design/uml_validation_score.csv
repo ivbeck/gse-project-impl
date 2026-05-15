@@ -1,0 +1,6 @@
+#,Criterion,Score,Justification
+1,Completeness,3,"Referenced types Piece, Position, and PlayerScore are not defined, leaving the domain model incomplete."
+2,Correctness,2,Multiplicities are entirely missing; relationship types do not distinguish between composition and dependency.
+3,Standards Adherence,4,"Valid Mermaid syntax, though nested generics in Map~int_List~Piece~~ can be fragile in some renderers."
+4,Comprehensibility,5,Excellent layout direction and clear labeling of association arrows.
+5,Terminological Alignment,5,"Perfectly aligns with ADR terminology (ConfigVO, RuleSet, PieceCatalog)."

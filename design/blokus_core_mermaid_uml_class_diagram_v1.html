@@ -1,0 +1,158 @@
+
+<style>
+#uml-wrap { padding: 1rem 0; }
+#uml-wrap svg { max-width: 100%; }
+.mermaid { font-size: 13px; }
+</style>
+<h2 class="sr-only">Blokus Classic core layer UML class diagram showing 8 core elements with attributes, methods, and associations</h2>
+<div id="uml-wrap">
+  <div id="mmd" class="mermaid"></div>
+</div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#5F5E5A',
+    textColor: dark ? '#c2c0b6' : '#2C2C2A',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryTextColor: dark ? '#CECBF6' : '#3C3489',
+    primaryBorderColor: dark ? '#7F77DD' : '#534AB7',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    secondaryTextColor: dark ? '#9FE1CB' : '#085041',
+    secondaryBorderColor: dark ? '#1D9E75' : '#0F6E56',
+    tertiaryColor: dark ? '#444441' : '#F1EFE8',
+    tertiaryTextColor: dark ? '#D3D1C7' : '#444441',
+    tertiaryBorderColor: dark ? '#888780' : '#5F5E5A',
+    noteBkgColor: dark ? '#412402' : '#FAEEDA',
+    noteTextColor: dark ? '#FAC775' : '#633806',
+    noteBorderColor: dark ? '#BA7517' : '#854F0B',
+    classDiagramLabelBackground: dark ? '#26215C' : '#EEEDFE',
+  },
+});
+
+const diagram = `classDiagram
+  direction TB
+
+  class GameStatus {
+    <<enumeration>>
+    IN_PROGRESS
+    FINISHED
+  }
+
+  class MoveResult {
+    <<enumeration>>
+    LEGAL
+    ILLEGAL
+  }
+
+  class ConfigVO {
+    -int boardWidth
+    -int boardHeight
+    -int playerCount
+    -Map~int_Position~ startingPositions
+    +int getBoardWidth() 
+    +int getBoardHeight() 
+    +int getPlayerCount() 
+    +Map~int_Position~ getStartingPositions() 
+  }
+
+  class Board {
+    -int width
+    -int height
+    -int[][] grid
+    +boolean isOccupied(int row, int col) 
+    +int getOwner(int row, int col) 
+    +boolean hasOrthogonalNeighbor(int row, int col, int playerId) 
+    +boolean hasDiagonalNeighbor(int row, int col, int playerId) 
+    +void applyMove(Move move) 
+  }
+
+  class PieceCatalog {
+    -List~Piece~ pieces
+    +List~Piece~ getAllPieces() 
+    +Piece getById(int pieceId) 
+    +List~int[][]~ getOrientations(int pieceId) 
+  }
+
+  class RuleSet {
+    +MoveResult checkLegality(Board board, Move move, boolean isFirstMove) 
+    +boolean isCornerPosition(Position pos, ConfigVO config) 
+    +List~Move~ enumerateLegal(Board board, int playerId, List~Piece~ remaining) 
+  }
+
+  class Scoring {
+    +List~PlayerScore~ rank(Map~int_List~Piece~~ remaining) 
+  }
+
+  class Move {
+    +int playerId
+    +int pieceId
+    +int orientationIndex
+    +int row
+    +int col
+  }
+
+  class GameSession {
+    -Board board
+    -PieceCatalog catalog
+    -RuleSet rules
+    -Scoring scoring
+    -ConfigVO config
+    -int currentPlayerId
+    -GameStatus status
+    -int consecutivePasses
+    +MoveResult submitMove(Move move) 
+    +boolean advanceTurn() 
+    +GameStatus detectTermination() 
+    +List~PlayerScore~ finalScores() 
+    +List~Move~ legalMovesForCurrent() 
+  }
+
+  class Port_PlayerInput {
+    <<interface>>
+    +Move requestMove(int playerId, List~Move~ legal) 
+  }
+
+  class Port_StateRepository {
+    <<interface>>
+    +void save(GameSession session) 
+    +GameSession restore() 
+  }
+
+  class Port_PresentationOutput {
+    <<interface>>
+    +void renderBoard(Board board) 
+    +void renderStatus(GameStatus status) 
+    +void promptReplay() 
+  }
+
+  class Port_ConfigSource {
+    <<interface>>
+    +ConfigVO loadConfig() 
+  }
+
+  GameSession --> Board : uses
+  GameSession --> PieceCatalog : uses
+  GameSession --> RuleSet : uses
+  GameSession --> Scoring : uses
+  GameSession --> ConfigVO : configured by
+  GameSession --> GameStatus : tracks
+  GameSession ..> Port_PlayerInput : calls
+  GameSession ..> Port_StateRepository : calls
+  GameSession ..> Port_PresentationOutput : calls
+  RuleSet ..> MoveResult : returns
+  RuleSet ..> Move : validates
+  Board ..> Move : applies
+`;
+
+const { svg } = await mermaid.render('mmd-svg', diagram);
+document.getElementById('mmd').innerHTML = svg;
+</script>
