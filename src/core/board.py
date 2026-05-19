@@ -13,9 +13,13 @@ class Board:
         self.grid = [[None] * config.board_width for _ in range(config.board_height)]
 
     def is_occupied(self, row: int, col: int) -> bool:
+        if not (0 <= row < self.config.board_height and 0 <= col < self.config.board_width):
+            return False
         return self.grid[row][col] is not None
 
     def get_owner(self, row: int, col: int) -> Optional[int]:
+        if not (0 <= row < self.config.board_height and 0 <= col < self.config.board_width):
+            return None
         return self.grid[row][col]
 
     def has_orthogonal_neighbor(self, row: int, col: int, player_id: int) -> bool:

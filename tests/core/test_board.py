@@ -71,3 +71,19 @@ def test_board_equality(config):
     assert board1 == board2
     board1.grid[0][0] = 0
     assert board1 != board2
+
+
+def test_is_occupied_out_of_bounds(config):
+    board = Board(config)
+    assert board.is_occupied(-1, 0) is False
+    assert board.is_occupied(0, -1) is False
+    assert board.is_occupied(20, 0) is False
+    assert board.is_occupied(0, 20) is False
+
+
+def test_get_owner_out_of_bounds(config):
+    board = Board(config)
+    assert board.get_owner(-1, 0) is None
+    assert board.get_owner(0, -1) is None
+    assert board.get_owner(20, 0) is None
+    assert board.get_owner(0, 20) is None
