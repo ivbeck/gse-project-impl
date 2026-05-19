@@ -41,6 +41,37 @@ def test_piece_catalog_domino_is_2_squares():
     assert squares == 2
 
 
+def test_piece_catalog_trominoes_have_3_squares():
+    catalog = PieceCatalog()
+    for piece_id in range(2, 4):
+        piece = catalog.get_by_id(piece_id)
+        squares = sum(cell for row in piece.shape for cell in row)
+        assert squares == 3, f"Piece {piece_id} has {squares} squares, expected 3"
+
+
+def test_piece_catalog_tetrominoes_have_4_squares():
+    catalog = PieceCatalog()
+    for piece_id in range(4, 9):
+        piece = catalog.get_by_id(piece_id)
+        squares = sum(cell for row in piece.shape for cell in row)
+        assert squares == 4, f"Piece {piece_id} has {squares} squares, expected 4"
+
+
+def test_piece_catalog_category_counts():
+    catalog = PieceCatalog()
+    pieces = catalog.get_all_pieces()
+
+    def count_squares(piece):
+        return sum(cell for row in piece.shape for cell in row)
+
+    counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for piece in pieces:
+        squares = count_squares(piece)
+        counts[squares] += 1
+
+    assert counts == {1: 1, 2: 1, 3: 2, 4: 5, 5: 12}, f"Category counts mismatch: {counts}"
+
+
 def test_piece_catalog_all_pentominoes_have_5_squares():
     catalog = PieceCatalog()
     for piece_id in range(9, 21):
