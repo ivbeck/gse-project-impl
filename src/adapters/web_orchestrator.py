@@ -2,6 +2,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
+from core.types import Move, MoveResult
+
 
 def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
     app = FastAPI(title="Blokus Web GUI")
@@ -39,5 +41,26 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
     @app.get("/pieces/{player_id}")
     def pieces(player_id: int):
         return {"pieces": list(session.remaining_pieces[player_id])}
+
+    @app.post("/move")
+    def move(move_data: dict):
+        move = Move(
+            player_id=move_data["player_id"],
+            piece_id=move_data["piece_id"],
+            orientation_index=move_data["orientation_index"],
+            row=move_data["row"],
+            col=move_data["col"],
+        )
+        result = session.submit_move(move)
+        presenter.render_board(session.board.grid)
+        if result == MoveResult.ILLEGAL:
+            return {"ok": False, "error": "Illegal move"}
+        return {"ok": True}
+
+    @app.post("/pass")
+    def pass_turn():
+        session.submit_pass()
+        presenter.render_board(session.board.grid)
+        return {"ok": True}
 
     return app
