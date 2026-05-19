@@ -37,6 +37,9 @@ class GameSession:
             self.consecutive_passes = 0
         return result
 
+    def submit_pass(self) -> None:
+        self.consecutive_passes += 1
+
     def advance_turn(self) -> None:
         self.current_player_id = (self.current_player_id + 1) % self.config.player_count
 

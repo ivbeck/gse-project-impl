@@ -46,4 +46,4 @@ def test_memento_contains_board_state(session):
 def test_memento_contains_remaining_pieces(session):
     m = Memento.from_session(session)
     assert len(m.remaining_pieces) == 4
-    assert all(len(pieces) == 21 for pieces in m.remaining_pieces.values())
+    assert all(len(pieces) == 21 for _, pieces in m.remaining_pieces)

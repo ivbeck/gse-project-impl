@@ -3,7 +3,8 @@ from typing import Protocol, runtime_checkable, TYPE_CHECKING
 from core.types import ConfigVO, Move, GameStatus
 
 if TYPE_CHECKING:
-    from core.game_session import GameSession
+    from core.memento import Memento
+    from core.board import Board
 
 
 @runtime_checkable
@@ -14,9 +15,9 @@ class PlayerInput(Protocol):
 
 @runtime_checkable
 class StateRepository(Protocol):
-    def save(self, session: GameSession) -> str:
+    def save(self, memento: Memento) -> str:
         ...
-    def restore(self, data: str) -> GameSession:
+    def restore(self, data: str) -> Memento:
         ...
 
 
@@ -28,7 +29,7 @@ class ConfigSource(Protocol):
 
 @runtime_checkable
 class PresentationOutput(Protocol):
-    def render_board(self, board) -> None:
+    def render_board(self, board: Board) -> None:
         ...
     def render_status(self, status: GameStatus) -> None:
         ...
