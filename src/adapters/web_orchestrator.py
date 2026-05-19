@@ -44,13 +44,16 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
 
     @app.post("/move")
     def move(move_data: dict):
-        move = Move(
-            player_id=move_data["player_id"],
-            piece_id=move_data["piece_id"],
-            orientation_index=move_data["orientation_index"],
-            row=move_data["row"],
-            col=move_data["col"],
-        )
+        try:
+            move = Move(
+                player_id=move_data["player_id"],
+                piece_id=move_data["piece_id"],
+                orientation_index=move_data["orientation_index"],
+                row=move_data["row"],
+                col=move_data["col"],
+            )
+        except (KeyError, TypeError, ValueError) as e:
+            return {"ok": False, "error": f"Invalid move data: {e}"}
         result = session.submit_move(move)
         presenter.render_board(session.board.grid)
         if result == MoveResult.ILLEGAL:

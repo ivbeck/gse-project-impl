@@ -1,11 +1,13 @@
 let selectedPiece = null;
 let currentOrientation = 0;
 let legalMoves = [];
+let currentPlayerId = 0;
 
 async function loadState() {
     try {
         const resp = await fetch('/state');
         const state = await resp.json();
+        currentPlayerId = state.current_player_id;
         renderBoard(state.board);
         renderTray(state.players[state.current_player_id]);
         renderDashboard(state);
@@ -69,7 +71,7 @@ function selectPiece(pieceId) {
 function onCellClick(row, col) {
     if (!selectedPiece) return;
     submitMove({
-        player_id: 0,
+        player_id: currentPlayerId,
         piece_id: selectedPiece,
         orientation_index: currentOrientation,
         row: row,
