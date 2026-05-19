@@ -4,7 +4,7 @@ from core.types import GameStatus
 COLORS = {0: "B", 1: "Y", 2: "R", 3: "G"}
 
 
-class CLI:
+class CLI(PresentationOutput):
     def render_board(self, board) -> None:
         print("  ", end="")
         for c in range(len(board[0])):
