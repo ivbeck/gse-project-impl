@@ -20,4 +20,6 @@ filterwarnings = ["error"]
 src = ["src"]
 
 [tool.mypy]
-src = ["src"]
+mypy_path = "."
+namespace_packages = true
+explicit_package_bases = true

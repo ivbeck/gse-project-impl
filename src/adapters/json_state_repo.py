@@ -1,5 +1,4 @@
 import json
-from core.ports import StateRepository
 from core.memento import Memento
 from core.types import ConfigVO, Position
 

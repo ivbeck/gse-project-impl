@@ -1,14 +1,12 @@
 """Procedural wiring for Blokus game engine (≤200 lines)."""
-from core.types import ConfigVO, Position, Move, MoveResult, GameStatus
+from core.types import ConfigVO, MoveResult, GameStatus
 from core.piece_catalog import PieceCatalog
 from core.rule_set import RuleSet
 from core.scoring import Scoring
 from core.game_session import GameSession
 from core.legal_move_enumerator import LegalMoveEnumerator
 from adapters.json_config_source import JsonConfigSource
-from adapters.json_state_repo import JsonStateRepo
 from adapters.human_player import HumanPlayer
-from adapters.simple_ai_player import SimpleAiPlayer
 from adapters.cli import CLI
 
 
