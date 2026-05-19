@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "title": "Guideline 1 Application — AGENTS.md Authoring",
+    "course": "Generative Software Engineering",
+    "date": "2026-05-19",
+    "author": "Denis",
+    "purpose": "Create the repository-level AGENTS.md context file for coding agents, following Topic-2 Guideline 1 (Context-Aware Grounding via Minimal Manual Documentation). Derive content from the binding SPEC and ADR; keep the file minimal, manually written, and non-redundant with existing docs.",
+    "artifact_produced": "AGENTS.md",
+    "model": "claude-opus-4-7",
+    "tool": "Claude Code (VSCode extension)",
+    "inputs_referenced": [
+      "gse-project/guideline_package/Topic-2_Guidelines.md",
+      "gse-project-impl/specifications/SPEC_M1.md",
+      "gse-project-impl/specifications/SPEC.md",
+      "gse-project-impl/design/ADR.md",
+      "gse-project-impl/design/README.md",
+      "gse-project-impl/README.md"
+    ]
+  },
+  "conversation": [
+    {
+      "turn": 1,
+      "role": "user",
+      "content": "Take @gse-project-impl/ as the context for the project. Based on Topic-2_Guidelines.md Guideline 1. create an AGENTS.md. From the context you will need to use design/ and specifications/ to produce the instructions file.",
+      "ide_context": {
+        "opened_file": "gse-project/guideline_package/Topic-2_Guidelines.md"
+      }
+    },
+    {
+      "turn": 2,
+      "role": "assistant",
+      "summary": "Read Topic-2_Guidelines.md (Guideline 1 — Context-Aware Grounding via Minimal Manual Documentation), gse-project-impl/README.md, specifications/SPEC.md and SPEC_M1.md (v2.0 ambiguity-resolved baseline), and design/ADR.md (ADR-FINAL-P2: Hexagonal + Strategy/Command/Builder/Memento; DR-1..DR-7 drift risks). Authored gse-project-impl/AGENTS.md as a minimal, manually written context file.",
+      "design_decisions": [
+        "Followed Guideline 1's 'good example' shape: no directory tree, no codebase overview, no architecture re-explanation — those live in ADR.md and SPEC_M1.md and the file just points at them.",
+        "Restricted content to non-obvious constraints an agent would silently get wrong by default: the Core.* import boundary, the no-literal-20/no-literal-4 rule (FR-1.2 / DR-1), Memento-as-source-of-truth on reload (DR-4), the lexicographic determinism contract (FR-3.4 / DR-3), and the procedural-Bootstrap rule (DR-7).",
+        "Listed both Java/Maven and Python/uv build commands per NFR-2.1 because the project had not yet committed to a language; flagged that the unused branch should be removed once chosen.",
+        "Pinned UML to v2 per design/README.md ('Use this version, not V1!') to prevent agents from regenerating against the stale diagram.",
+        "Explicitly excluded Milestone 2 (Duo) per ADR scope and DR-6.",
+        "Added a short 'When extending' section so new player adapters, rule changes, and config knobs land at the right hex layer instead of leaking into the core."
+      ],
+      "artifact": {
+        "path": "AGENTS.md",
+        "purpose": "Repository-level context file consumed by coding agents (Claude Code, etc.) on every session."
+      }
+    },
+    {
+      "turn": 3,
+      "role": "user",
+      "content": "The python is chosen now as the programming language for the project. Update everything to clearly state this."
+    },
+    {
+      "turn": 4,
+      "role": "assistant",
+      "summary": "Updated AGENTS.md to commit to Python/uv and updated README.md to record the language choice. Deliberately did not retroactively edit SPEC_M1.md or ADR.md, since those are baseline / decision-record documents whose 'Java or Python' phrasing reflects NFR-2.1 as written — the language selection is a downstream commitment recorded in the live coding-agent context.",
+      "design_decisions": [
+        "AGENTS.md: replaced the dual Java/Python build section with a Python-only 'Language & build / test / run' section, locking in uv as the package/env manager and rejecting pip/poetry/conda/setup.py workflows.",
+        "AGENTS.md: added a Python-specific mapping for the four hexagonal patterns — ports → typing.Protocol (or abc.ABC); value objects (ConfigVO, Memento, move Command) → @dataclass(frozen=True); Strategy → plain classes implementing the PlayerInput Protocol — so the architectural contract is concrete in the chosen language.",
+        "AGENTS.md: narrowed the no-GUI list to Python libraries (Tk, Qt, PyGame).",
+        "README.md: added a single-line 'Implementation language: Python (uv)' header pointing at AGENTS.md.",
+        "Left SPEC_M1.md and ADR.md untouched; flagged this trade-off to the user and offered an ADR addendum as the conventional alternative if a retroactive narrowing is desired."
+      ],
+      "artifacts": [
+        {
+          "path": "AGENTS.md",
+          "change": "Replaced Java/Python dual build section with Python/uv-only commitment; added Python-specific pattern mapping; updated no-GUI library list."
+        },
+        {
+          "path": "README.md",
+          "change": "Added 'Implementation language: Python (uv)' line referencing AGENTS.md."
+        }
+      ]
+    },
+    {
+      "turn": 5,
+      "role": "user",
+      "content": "Export this conversation to json and save it in prompts/ with denis_ prefix."
+    },
+    {
+      "turn": 6,
+      "role": "assistant",
+      "summary": "Listed prompts/ to learn the existing convention, inspected denis_adr_prompt.json for schema, then wrote prompts/denis_agents_md_creation.json matching the existing metadata + conversation structure used by prior denis_* files.",
+      "artifact": {
+        "path": "prompts/denis_agents_md_creation.json",
+        "purpose": "Conversation log for the AGENTS.md authoring session, kept alongside other denis_* prompt exports for the GSE project audit trail (AR-2.2)."
+      }
+    }
+  ]
+}
