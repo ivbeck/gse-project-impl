@@ -1,7 +1,7 @@
 from core.types import Piece
 
 
-_PIECE_DEFINITIONS: list[list[str]] = [
+_PIECE_DEFINITIONS: list[list[list[str]]] = [
     [["1"]],
     [["1", "1"]],
     [["1", "1", "1"]],
