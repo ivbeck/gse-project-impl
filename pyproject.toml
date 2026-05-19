@@ -1,0 +1,23 @@
+[project]
+name = "blokus-engine"
+version = "0.1.0"
+description = "Configurable Blokus game engine"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error"]
+
+[tool.ruff]
+src = ["src"]
+
+[tool.mypy]
+ignore_missing_imports = true
