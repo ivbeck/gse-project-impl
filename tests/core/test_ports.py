@@ -1,6 +1,30 @@
 import pytest
 from typing import Protocol, runtime_checkable
-from core.ports import PlayerInput, StateRepository, ConfigSource, PresentationOutput
+from core.ports import (
+    ConfigSource,
+    GameSession,
+    LegalMoveEnumerator,
+    MoveValidator,
+    PlayerInput,
+    PresentationOutput,
+    StateRepository,
+)
+
+
+def test_game_session_is_protocol():
+    assert hasattr(GameSession, 'submit_move')
+    assert hasattr(GameSession, 'submit_pass')
+    assert hasattr(GameSession, 'advance_turn')
+    assert hasattr(GameSession, 'detect_termination')
+    assert hasattr(GameSession, 'final_scores')
+
+
+def test_move_validator_is_protocol():
+    assert hasattr(MoveValidator, 'check_legality')
+
+
+def test_legal_move_enumerator_is_protocol():
+    assert hasattr(LegalMoveEnumerator, 'find_moves')
 
 
 def test_player_input_is_protocol():

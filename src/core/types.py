@@ -1,9 +1,5 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final
-
-BOARD_WIDTH: Final[int] = 20
-BOARD_HEIGHT: Final[int] = 20
-PLAYER_COUNT: Final[int] = 4
 
 
 @dataclass(frozen=True)
@@ -50,3 +46,45 @@ class ConfigVO:
     board_height: int
     player_count: int
     starting_positions: dict[int, Position]
+
+
+class ConfigBuilder:
+    def __init__(self) -> None:
+        self._board_width: int | None = None
+        self._board_height: int | None = None
+        self._player_count: int | None = None
+        self._starting_positions: dict[int, Position] = {}
+
+    def with_board_dimensions(self, width: int, height: int) -> ConfigBuilder:
+        self._board_width = width
+        self._board_height = height
+        return self
+
+    def with_player_count(self, player_count: int) -> ConfigBuilder:
+        self._player_count = player_count
+        return self
+
+    def with_starting_positions(self, positions: dict[int, Position]) -> ConfigBuilder:
+        self._starting_positions = dict(positions)
+        return self
+
+    def build(self) -> ConfigVO:
+        if self._board_width is None or self._board_height is None:
+            raise ValueError("board dimensions are required")
+        if self._player_count is None:
+            raise ValueError("player count is required")
+        if self._board_width <= 0 or self._board_height <= 0:
+            raise ValueError("board dimensions must be positive")
+        if self._player_count <= 0:
+            raise ValueError("player count must be positive")
+        if set(self._starting_positions) != set(range(self._player_count)):
+            raise ValueError("starting positions must cover every player")
+        for position in self._starting_positions.values():
+            if not (0 <= position.row < self._board_height and 0 <= position.col < self._board_width):
+                raise ValueError("starting positions must be on the board")
+        return ConfigVO(
+            board_width=self._board_width,
+            board_height=self._board_height,
+            player_count=self._player_count,
+            starting_positions=dict(self._starting_positions),
+        )

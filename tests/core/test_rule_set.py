@@ -75,6 +75,21 @@ def test_orthogonal_prohibition_same_color(config, board, catalog, ruleset):
     assert result == MoveResult.ILLEGAL
 
 
+def test_out_of_bounds_move_is_illegal(config, board, catalog, ruleset):
+    move = Move(player_id=0, piece_id=1, orientation_index=0, row=0, col=19)
+    cells = [(0, 0), (0, 1)]
+    result = ruleset.check_legality(board, move, is_first_move=True, cells=cells)
+    assert result == MoveResult.ILLEGAL
+
+
+def test_overlapping_move_is_illegal(config, board, catalog, ruleset):
+    board.grid[0][0] = 1
+    move = Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0)
+    cells = [(0, 0)]
+    result = ruleset.check_legality(board, move, is_first_move=True, cells=cells)
+    assert result == MoveResult.ILLEGAL
+
+
 def test_different_color_contact_allowed(config, board, catalog, ruleset):
     board.grid[0][0] = 0
     board.grid[1][0] = 1

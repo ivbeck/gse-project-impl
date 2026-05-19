@@ -1,5 +1,5 @@
 import json
-from core.types import ConfigVO, Position
+from core.types import ConfigBuilder, ConfigVO, Position
 
 
 class JsonConfigSource:
@@ -17,11 +17,12 @@ class JsonConfigSource:
             "2": {"row": bh - 1, "col": bw - 1},
             "3": {"row": bh - 1, "col": 0},
         })
-        return ConfigVO(
-            board_width=bw,
-            board_height=bh,
-            player_count=pc,
-            starting_positions={
+        return (
+            ConfigBuilder()
+            .with_board_dimensions(bw, bh)
+            .with_player_count(pc)
+            .with_starting_positions({
                 int(k): Position(v["row"], v["col"]) for k, v in sp.items()
-            }
+            })
+            .build()
         )

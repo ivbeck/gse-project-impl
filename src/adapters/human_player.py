@@ -11,8 +11,16 @@ class HumanPlayer(PlayerInput):
             print(f"  {i}: piece={m.piece_id} orient={m.orientation_index} row={m.row} col={m.col}")
         if len(legal_moves) > 10:
             print(f"  ... and {len(legal_moves) - 10} more moves")
-        choice = input("Enter move index (or -1 to pass): ")
-        idx = int(choice)
-        if idx < 0:
-            return None
-        return legal_moves[idx]
+        while True:
+            choice = input("Enter move index (or -1 to pass): ")
+            try:
+                idx = int(choice)
+            except ValueError:
+                print("Please enter a number.")
+                continue
+            if idx < 0:
+                return None
+            if idx >= len(legal_moves):
+                print("Move index out of range.")
+                continue
+            return legal_moves[idx]

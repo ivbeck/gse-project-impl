@@ -52,6 +52,13 @@ def test_enumerator_finds_first_move_corner(session, enumerator):
     assert move.row == 0 and move.col == 0
 
 
+def test_enumerator_requires_first_move_flag_for_empty_board(session, enumerator):
+    without_flag = enumerator.find_moves(session.board, 0, [0], is_first_move=False)
+    with_flag = enumerator.find_moves(session.board, 0, [0], is_first_move=True)
+    assert without_flag == []
+    assert len(with_flag) == 1
+
+
 def test_enumerator_empty_when_no_pieces(session, enumerator):
     moves = enumerator.find_moves(session.board, 0, [])
     assert len(moves) == 0

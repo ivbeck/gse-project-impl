@@ -13,7 +13,7 @@ def test_scoring_all_remaining_pieces(catalog):
     remaining = {0: list(range(21)), 1: list(range(21)), 2: list(range(21)), 3: list(range(21))}
     scores = scoring.rank(remaining)
     assert len(scores) == 4
-    assert all(s.score == 129 for s in scores)
+    assert all(s.score == 89 for s in scores)
     assert all(s.is_winner for s in scores)
 
 

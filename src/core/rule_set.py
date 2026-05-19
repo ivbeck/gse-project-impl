@@ -24,6 +24,10 @@ class RuleSet:
         cells: list[tuple[int, int]],
     ) -> MoveResult:
         player_id = move.player_id
+        if player_id not in self.config.starting_positions:
+            return MoveResult.ILLEGAL
+        if not self._cells_fit_empty_board_spaces(board, move, cells):
+            return MoveResult.ILLEGAL
         if is_first_move:
             corner = self.config.starting_positions[player_id]
             covers_corner = any(
@@ -38,6 +42,20 @@ class RuleSet:
         if self._has_orthogonal_same_color(board, move, cells, player_id):
             return MoveResult.ILLEGAL
         return MoveResult.LEGAL
+
+    def _cells_fit_empty_board_spaces(
+        self,
+        board: Board,
+        move: Move,
+        cells: list[tuple[int, int]],
+    ) -> bool:
+        for dr, dc in cells:
+            row, col = move.row + dr, move.col + dc
+            if not board.in_bounds(row, col):
+                return False
+            if board.is_occupied(row, col):
+                return False
+        return True
 
     def _touches_corner_diagonally(
         self,

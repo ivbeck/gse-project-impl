@@ -24,7 +24,8 @@ def run_loop(session: GameSession, player_input, cli: CLI):
         legal_moves = enumerator.find_moves(
             session.board,
             session.current_player_id,
-            session.remaining_pieces[session.current_player_id]
+            session.remaining_pieces[session.current_player_id],
+            session.is_first_move(session.current_player_id),
         )
         move = player_input.request_move(session.current_player_id, legal_moves)
         if move is None:

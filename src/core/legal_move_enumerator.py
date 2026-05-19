@@ -17,11 +17,13 @@ class LegalMoveEnumerator:
         is_first_move: bool = False
     ) -> list[Move]:
         legal_moves = []
-        for piece_id in remaining_piece_ids:
+        for piece_id in sorted(remaining_piece_ids):
             orientations = self.catalog.get_orientations(piece_id)
             for orient_idx, orientation in enumerate(orientations):
-                for row in range(board.config.board_height):
-                    for col in range(board.config.board_width):
+                max_row = max(r for r, _ in orientation)
+                max_col = max(c for _, c in orientation)
+                for row in range(board.config.board_height - max_row):
+                    for col in range(board.config.board_width - max_col):
                         move = Move(
                             player_id=player_id,
                             piece_id=piece_id,

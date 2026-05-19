@@ -9,7 +9,7 @@ class Scoring:
     def rank(self, remaining: dict[int, list[int]]) -> list[PlayerScore]:
         def piece_square_count(piece_id: int) -> int:
             piece = self.catalog.get_by_id(piece_id)
-            return sum(len(row) for row in piece.shape)
+            return sum(cell for row in piece.shape for cell in row)
 
         scores = []
         for player_id, piece_ids in remaining.items():

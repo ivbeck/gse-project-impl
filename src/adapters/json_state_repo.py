@@ -1,6 +1,6 @@
 import json
 from core.memento import Memento
-from core.types import ConfigVO, Position
+from core.types import ConfigBuilder, Position
 
 
 class JsonStateRepo:
@@ -12,7 +12,7 @@ class JsonStateRepo:
                 "player_count": memento.config.player_count,
                 "starting_positions": {
                     str(pid): {"row": pos.row, "col": pos.col}
-                    for pid, pos in memento.config.starting_positions.items()
+                    for pid, pos in sorted(memento.config.starting_positions.items())
                 }
             },
             "board_state": [[cell for cell in row] for row in memento.board_state],
@@ -26,19 +26,20 @@ class JsonStateRepo:
                 (player_id, flag)
                 for player_id, flag in memento.is_first_move
             ],
-        })
+        }, sort_keys=True)
 
     def restore(self, data: str) -> Memento:
         parsed = json.loads(data)
         config_data = parsed["config"]
-        config = ConfigVO(
-            board_width=config_data["board_width"],
-            board_height=config_data["board_height"],
-            player_count=config_data["player_count"],
-            starting_positions={
+        config = (
+            ConfigBuilder()
+            .with_board_dimensions(config_data["board_width"], config_data["board_height"])
+            .with_player_count(config_data["player_count"])
+            .with_starting_positions({
                 int(pid): Position(pos["row"], pos["col"])
                 for pid, pos in config_data["starting_positions"].items()
-            }
+            })
+            .build()
         )
         board_state = tuple(
             tuple(cell for cell in row)

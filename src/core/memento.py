@@ -20,11 +20,11 @@ class Memento:
         )
         remaining_pieces = tuple(
             (player_id, tuple(pieces))
-            for player_id, pieces in session.remaining_pieces.items()
+            for player_id, pieces in sorted(session.remaining_pieces.items())
         )
         is_first_move = tuple(
             (player_id, flag)
-            for player_id, flag in session._is_first_move.items()
+            for player_id, flag in sorted(session._is_first_move.items())
         )
         return cls(
             config=session.config,

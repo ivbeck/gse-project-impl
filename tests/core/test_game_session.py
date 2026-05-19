@@ -41,6 +41,27 @@ def test_game_session_submit_legal_move(session):
     move = Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0)
     result = session.submit_move(move)
     assert result == MoveResult.LEGAL
+    assert session.board.get_owner(0, 0) == 0
+    assert 0 not in session.remaining_pieces[0]
+    assert not session.is_first_move(0)
+
+
+def test_game_session_rejects_wrong_turn(session):
+    move = Move(player_id=1, piece_id=0, orientation_index=0, row=0, col=19)
+    result = session.submit_move(move)
+    assert result == MoveResult.ILLEGAL
+    assert session.board.get_owner(0, 19) is None
+
+
+def test_game_session_rejects_reused_piece(session):
+    move = Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0)
+    assert session.submit_move(move) == MoveResult.LEGAL
+    assert session.submit_move(move) == MoveResult.ILLEGAL
+
+
+def test_game_session_rejects_invalid_orientation(session):
+    move = Move(player_id=0, piece_id=0, orientation_index=99, row=0, col=0)
+    assert session.submit_move(move) == MoveResult.ILLEGAL
 
 
 def test_game_session_detect_termination_not_terminated(session):
@@ -55,3 +76,16 @@ def test_game_session_final_scores(session):
 def test_game_session_advance_turn(session):
     session.advance_turn()
     assert session.current_player_id == 1
+
+
+def test_game_session_restore_uses_memento_config(session):
+    from core.memento import Memento
+
+    session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0))
+    memento = Memento.from_session(session)
+    catalog = PieceCatalog()
+    restored = GameSession.from_memento(memento, catalog, Scoring(catalog))
+    assert restored.config == memento.config
+    assert restored.board.config == memento.config
+    assert restored.board.get_owner(0, 0) == 0
+    assert restored.remaining_pieces == session.remaining_pieces

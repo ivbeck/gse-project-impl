@@ -1,6 +1,6 @@
 import pytest
 from core.board import Board
-from core.types import ConfigVO, Position
+from core.types import ConfigVO, Move, Position
 
 
 @pytest.fixture
@@ -57,12 +57,26 @@ def test_board_has_diagonal_neighbor(config):
 
 
 def test_board_apply_move(config):
-    from core.types import Move
     board = Board(config)
     move = Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0)
     board.apply_move(move, [(0, 0)])
     assert board.is_occupied(0, 0)
     assert board.get_owner(0, 0) == 0
+
+
+def test_board_apply_move_rejects_out_of_bounds(config):
+    board = Board(config)
+    move = Move(player_id=0, piece_id=1, orientation_index=0, row=0, col=19)
+    with pytest.raises(ValueError):
+        board.apply_move(move, [(0, 0), (0, 1)])
+
+
+def test_board_apply_move_rejects_overlap(config):
+    board = Board(config)
+    board.grid[0][0] = 1
+    move = Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0)
+    with pytest.raises(ValueError):
+        board.apply_move(move, [(0, 0)])
 
 
 def test_board_equality(config):
