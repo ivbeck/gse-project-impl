@@ -1,0 +1,59 @@
+{
+  "source": "prompts/iven_PART1.json + prompts/iven_coding_orchestrator.json",
+  "task_log": {
+    "task": "Task 2: PieceCatalog — All 21 Pieces",
+    "task_id": "ses_1bfb60f5affeWLV8VWgccjghJs",
+    "prompt": "You are implementing Task 2: PieceCatalog — All 21 Pieces\n\n## Task Description\n\n**Goal:** Implement PieceCatalog with all 21 Blokus pieces and precomputed orientations.\n\n**Files to create:**\n- src/core/piece_catalog.py\n- tests/core/test_piece_catalog.py\n\n[TDD tests and implementation details omitted for brevity]\n\nWorking directory: /home/iven/coding/projects/gse-project-impl",
+    "result": "Task 2 (PieceCatalog) complete. Created PieceCatalog with all 21 pieces, precomputed orientations, 12 tests passing.",
+    "status": "DONE",
+    "commits": [
+      "fe73aee test: add coverage for trominoes, tetrominoes, and piece category counts",
+      "601a602 Add PieceCatalog with all 21 Blokus pieces and precomputed orientations"
+    ]
+  },
+  "conversation_events": [
+    {
+      "type": "tool",
+      "tool": "task",
+      "callID": "call_function_2ojmy561s34w_1",
+      "state": {
+        "status": "completed",
+        "input": {
+          "description": "Implement Task 2: PieceCatalog",
+          "prompt": "You are implementing Task 2: PieceCatalog — All 21 Pieces\n\n## Task Description\n\n**Goal:** Implement PieceCatalog with all 21 Blokus pieces (1 monomino, 1 domino, 2 trominoes, 5 tetrominoes, 12 pentominoes) and precomputed orientations.\n\n**Files to create:**\n- `src/core/piece_catalog.py`\n- `tests/core/test_piece_catalog.py`\n\n**Step 1: Write failing tests for PieceCatalog**\n\n```python\n# tests/core/test_piece_catalog.py\nimport pytest\nfrom core.piece_catalog import PieceCatalog\n\ndef test_piece_catalog_has_21_pieces():\n    catalog = PieceCatalog()\n    assert len(catalog.get_all_pieces()) == 21\n\ndef test_piece_catalog_piece_ids_range_0_to_20():\n    catalog = PieceCatalog()\n    ids = {p.piece_id for p in catalog.get_all_pieces()}\n    assert ids == set(range(21))\n\ndef test_piece_catalog_get_by_id():\n    catalog = PieceCatalog()\n    piece = catalog.get_by_id(0)\n    assert piece.piece_id == 0\n\ndef test_piece_catalog_all_pieces_have_shape():\n    catalog = PieceCatalog()\n    for piece in catalog.get_all_pieces():\n        assert len(piece.shape) > 0\n        for row in piece.shape:\n            assert len(row) > 0\n\ndef test_piece_catalog_monomino_is_1_square():\n    catalog = PieceCatalog()\n    monomino = catalog.get_by_id(0)\n    assert len(monomino.shape) == 1\n    assert len(monomino.shape[0]) == 1\n\ndef test_piece_catalog_domino_is_2_squares():\n    catalog = PieceCatalog()\n    domino = catalog.get_by_id(1)\n    squares = sum(len(row) for row in domino.shape)\n    assert squares == 2\n\ndef test_piece_catalog_all_pentominoes_have_5_squares():\n    catalog = PieceCatalog()\n    for piece_id in range(5, 17):  # pentominoes are IDs 5-16\n        piece = catalog.get_by_id(piece_id)\n        squares = sum(len(row) for row in piece.shape)\n        assert squares == 5, f\"Piece {piece_id} has {squares} squares, expected 5\"\n\ndef test_piece_catalog_all_orientations_for_each_piece():\n    catalog = PieceCatalog()\n    for piece in catalog.get_all_pieces():\n        orientations = catalog.get_orientations(piece.piece_id)\n        assert len(orientations) > 0, f\"Piece {piece.piece_id} has no orientations\"\n        for orientation in orientations:\n            assert len(orientation) > 0\n\ndef test_piece_catalog_orientation_covers_valid_positions():\n    catalog = PieceCatalog()\n    for piece in catalog.get_all_pieces():\n        for orientation in catalog.get_orientations(piece.piece_id):\n            min_row = min(r for r, _ in orientation)\n            min_col = min(c for _, c in orientation)\n            assert min_row >= 0\n            assert min_col >= 0\n```\n\n**Step 2: Run tests to verify they fail** - ModuleNotFoundError expected\n\n**Step 3: Implement PieceCatalog**\n\nThe 21 Blokus pieces with IDs 0-20:\n- ID 0: monomino (1 square) - shape: [(0,0)]\n- ID 1: domino (2 squares) - shape: [(0,0), (0,1)]\n- IDs 2-3: trominoes (3 squares, 4 orientations each)\n- IDs 4-8: tetrominoes (4 squares, 8 orientations each for I, O, T, L, J)\n- IDs 9-20: pentominoes (5 squares, 8 orientations each)\n\nThe piece catalog must precompute all orientations for each piece. Orientations include rotations (0, 90, 180, 270 degrees) and reflections.\n\nImplementation must:\n1. Store all 21 pieces with their base shapes\n2. Precompute all valid orientations for each piece\n3. Provide `get_all_pieces()`, `get_by_id(id)`, `get_orientations(id)`\n\n**Step 4: Run tests to verify they pass**\n\n**Step 5: Commit**\n\nWorking directory: /home/iven/coding/projects/gse-project-impl on branch feature/blokus-engine\n\n## Context\n\nThe PieceCatalog is a core component that precomputes all piece orientations for performance (NFR-1.1). It is used by LegalMoveEnumerator and must be fast. All orientations must be precomputed once at initialization.\n\n## Before You Begin\nIf you have questions about the piece shapes or orientation logic, ask now.\n\n## Your Job\n1. Write failing tests (TDD)\n2. Run tests to verify they fail\n3. Implement PieceCatalog with all 21 pieces\n4. Run tests to verify they pass\n5. Commit your work\n6. Self-review and report\n\n**After reporting back, wait for spec compliance and code quality review feedback.**",
+          "subagent_type": "general"
+        },
+        "output": "task_id: ses_1bfb60f5affeWLV8VWgccjghJs (for resuming to continue this task if needed)\n\n<task_result>\nTask 2 (PieceCatalog) complete.\n\n**Summary:**\n- Created `src/core/piece_catalog.py` with all 21 Blokus pieces (IDs 0-20)\n- Created `tests/core/test_piece_catalog.py` with 9 tests covering piece counts, shape validation, and orientation precomputation\n- Fixed `tests/conftest.py` to set PYTHONPATH for test imports\n- Fixed literal `4` in rotation loop by using `len(grid[0]) + len(grid)` instead\n- Corrected the original test's pentomino range from `range(5, 17)` to `range(9, 21)` based on actual piece definitions\n- All 11 tests pass, ruff linting clean\n\n**Self-review findings:**\n- Piece IDs 0-20 correctly represent: 1 monomino, 1 domino, 2 trominoes, 5 tetrominoes, 12 pentominoes\n- Orientation counts are mathematically correct (symmetric pieces have fewer unique orientations)\n- No hardcoded board size (`20`) or player count (`4`) in core code\n- `core.types` is correctly imported; `BOARD_WIDTH`/`PLAYER_COUNT` exist but aren't used in this module\n</task_result>",
+        "metadata": {
+          "parentSessionId": "ses_1bfc39f32ffeqINKm8Nk3fnQrc",
+          "sessionId": "ses_1bfb60f5affeWLV8VWgccjghJs",
+          "model": {
+            "modelID": "minimax/minimax-m2.7",
+            "providerID": "openrouter"
+          },
+          "truncated": false
+        },
+        "title": "Implement Task 2: PieceCatalog",
+        "time": {
+          "start": 1779195048138,
+          "end": 1779196034881
+        }
+      },
+      "metadata": {
+        "openrouter": {
+          "reasoning_details": [
+            {
+              "type": "reasoning.text",
+              "text": "Now let me dispatch Task 2 (PieceCatalog) implementation. I'll dispatch the implementer subagent with the full task description from the plan.",
+              "format": "unknown",
+              "index": 0
+            }
+          ]
+        }
+      },
+      "id": "prt_e4049c291001UfexMs4Ry7dopI",
+      "sessionID": "ses_1bfc39f32ffeqINKm8Nk3fnQrc",
+      "messageID": "msg_e404993520017UYSQTQLv1LTwB"
+    }
+  ]
+}
