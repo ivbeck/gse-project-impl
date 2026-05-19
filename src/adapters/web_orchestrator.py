@@ -16,18 +16,28 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
 
     @app.get("/state")
     def state():
+        board = session.board.grid
+        current = session.current_player_id
+        remaining = session.remaining_pieces
+        scores = session.final_scores()
         return {
-            "board": [[None]*20 for _ in range(20)],
-            "current_player_id": 0,
+            "board": [[cell if cell is not None else None for cell in row] for row in board],
+            "current_player_id": current,
             "players": [
-                {"id": 0, "color": "Blue", "remaining_pieces": list(range(21))},
-                {"id": 1, "color": "Yellow", "remaining_pieces": list(range(21))},
-                {"id": 2, "color": "Red", "remaining_pieces": list(range(21))},
-                {"id": 3, "color": "Green", "remaining_pieces": list(range(21))},
+                {
+                    "id": pid,
+                    "color": ["Blue", "Yellow", "Red", "Green"][pid],
+                    "remaining_pieces": list(pieces),
+                }
+                for pid, pieces in remaining.items()
             ],
-            "scores": [{"player_id": i, "score": 0, "is_winner": False} for i in range(4)],
-            "game_status": "IN_PROGRESS",
-            "consecutive_passes": 0,
+            "scores": [{"player_id": s.player_id, "score": s.score, "is_winner": s.is_winner} for s in scores],
+            "game_status": session.detect_termination().name,
+            "consecutive_passes": session.consecutive_passes,
         }
+
+    @app.get("/pieces/{player_id}")
+    def pieces(player_id: int):
+        return {"pieces": list(session.remaining_pieces[player_id])}
 
     return app
