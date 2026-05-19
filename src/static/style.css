@@ -1,0 +1,115 @@
+:root {
+    --blue: #3b82f6;
+    --yellow: #facc15;
+    --red: #ef4444;
+    --green: #22c55e;
+    --bg-dark: #1a1a2e;
+    --bg-cell: #16213e;
+    --grid-line: #2a2a4a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg-dark);
+    color: #fff;
+    min-height: 100vh;
+}
+
+#app { padding: 20px; }
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.turn-indicator {
+    font-size: 1.2em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+}
+
+.game-container {
+    display: grid;
+    grid-template-columns: 200px 1fr 250px;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.board-container {
+    display: flex;
+    justify-content: center;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(20, 28px);
+    gap: 1px;
+    background: var(--grid-line);
+    padding: 1px;
+    border-radius: 4px;
+}
+
+.cell {
+    width: 28px;
+    height: 28px;
+    background: var(--bg-cell);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.cell:hover { background: #1e3a5f; }
+.cell.blue { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+.cell.yellow { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+.cell.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.cell.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+#player-tray .piece {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.1);
+    margin: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+#player-tray .piece:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(255,255,255,0.3);
+}
+
+#player-tray .piece.selected {
+    box-shadow: 0 0 16px var(--blue);
+    border: 2px solid #fff;
+}
+
+#piece-preview {
+    background: rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+#dashboard {
+    background: rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+#dashboard table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#dashboard th, #dashboard td {
+    text-align: left;
+    padding: 4px 8px;
+}
