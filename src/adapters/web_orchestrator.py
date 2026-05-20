@@ -50,12 +50,69 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
 
     @app.get("/piece-catalog")
     def piece_catalog():
+        def orientation_grid(orientation):
+            rows = max(r for r, _ in orientation) + 1
+            cols = max(c for _, c in orientation) + 1
+            grid = [[0] * cols for _ in range(rows)]
+            for row, col in orientation:
+                grid[row][col] = 1
+            return grid
+
+        def grid_key(grid):
+            return "/".join("".join(str(cell) for cell in row) for row in grid)
+
+        def rotate_grid(grid):
+            rows = len(grid)
+            cols = len(grid[0])
+            result = [[0] * rows for _ in range(cols)]
+            for row_index, row in enumerate(grid):
+                for col_index, cell in enumerate(row):
+                    result[col_index][rows - 1 - row_index] = cell
+            return result
+
+        def reflect_horizontal(grid):
+            return [list(reversed(row)) for row in grid]
+
+        def reflect_vertical(grid):
+            return list(reversed([list(row) for row in grid]))
+
+        def find_orientation_index(orientation_indexes, grid):
+            return orientation_indexes[grid_key(grid)]
+
+        def orientation_transitions(orientation_grids):
+            orientation_indexes = {
+                grid_key(grid): index
+                for index, grid in enumerate(orientation_grids)
+            }
+            rotate_to = []
+            flip_to = []
+            for index, grid in enumerate(orientation_grids):
+                rotate_to.append(find_orientation_index(orientation_indexes, rotate_grid(grid)))
+                horizontal = find_orientation_index(orientation_indexes, reflect_horizontal(grid))
+                if horizontal != index:
+                    flip_to.append(horizontal)
+                    continue
+                vertical = find_orientation_index(orientation_indexes, reflect_vertical(grid))
+                flip_to.append(vertical)
+            return rotate_to, flip_to
+
+        def piece_payload(piece):
+            orientation_grids = [
+                orientation_grid(orientation)
+                for orientation in session.catalog.get_orientations(piece.piece_id)
+            ]
+            rotate_to, flip_to = orientation_transitions(orientation_grids)
+            return {
+                "piece_id": piece.piece_id,
+                "shape": [list(row) for row in piece.shape],
+                "orientations": orientation_grids,
+                "rotate_to": rotate_to,
+                "flip_to": flip_to,
+            }
+
         return {
             "pieces": [
-                {
-                    "piece_id": piece.piece_id,
-                    "shape": [list(row) for row in piece.shape],
-                }
+                piece_payload(piece)
                 for piece in session.catalog.get_all_pieces()
             ]
         }

@@ -25,6 +25,53 @@ def _real_client():
     app = create_web_orchestrator(session, None, Mock())
     return TestClient(app)
 
+
+def _orientation_grid(orientation):
+    rows = max(r for r, _ in orientation) + 1
+    cols = max(c for _, c in orientation) + 1
+    grid = [[0] * cols for _ in range(rows)]
+    for row, col in orientation:
+        grid[row][col] = 1
+    return grid
+
+
+def _grid_key(grid):
+    return "/".join("".join(str(cell) for cell in row) for row in grid)
+
+
+def _rotate_grid(grid):
+    rows = len(grid)
+    cols = len(grid[0])
+    result = [[0] * rows for _ in range(cols)]
+    for row_index, row in enumerate(grid):
+        for col_index, cell in enumerate(row):
+            result[col_index][rows - 1 - row_index] = cell
+    return result
+
+
+def _reflect_horizontal(grid):
+    return [list(reversed(row)) for row in grid]
+
+
+def _reflect_vertical(grid):
+    return list(reversed([list(row) for row in grid]))
+
+
+def _orientation_transitions(orientation_grids):
+    orientation_indexes = {
+        _grid_key(grid): index
+        for index, grid in enumerate(orientation_grids)
+    }
+    rotate_to = []
+    flip_to = []
+    for index, grid in enumerate(orientation_grids):
+        rotate_to.append(orientation_indexes[_grid_key(_rotate_grid(grid))])
+        horizontal = orientation_indexes[_grid_key(_reflect_horizontal(grid))]
+        vertical = orientation_indexes[_grid_key(_reflect_vertical(grid))]
+        flip_to.append(horizontal if horizontal != index else vertical)
+    return rotate_to, flip_to
+
+
 def test_web_orchestrator_health_check():
     app = create_web_orchestrator(None, None, None)
     client = TestClient(app)
@@ -71,18 +118,128 @@ def test_web_orchestrator_state_returns_game_data():
 
 def test_web_orchestrator_piece_catalog_exposes_core_shapes():
     client = _real_client()
+    catalog = PieceCatalog()
 
     response = client.get("/piece-catalog")
 
     assert response.status_code == 200
     expected = [
-        {
-            "piece_id": piece.piece_id,
-            "shape": [list(row) for row in piece.shape],
-        }
-        for piece in PieceCatalog().get_all_pieces()
+        _piece_catalog_payload(catalog, piece)
+        for piece in catalog.get_all_pieces()
     ]
     assert response.json() == {"pieces": expected}
+
+
+def _piece_catalog_payload(catalog, piece):
+    orientations = [
+        _orientation_grid(orientation)
+        for orientation in catalog.get_orientations(piece.piece_id)
+    ]
+    rotate_to, flip_to = _orientation_transitions(orientations)
+    return {
+        "piece_id": piece.piece_id,
+        "shape": [list(row) for row in piece.shape],
+        "orientations": orientations,
+        "rotate_to": rotate_to,
+        "flip_to": flip_to,
+    }
+
+
+def test_web_orchestrator_piece_catalog_exposes_symmetric_orientation_once():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    monomino = response.json()["pieces"][0]
+    assert monomino["orientations"] == [[[1]]]
+
+
+def test_web_orchestrator_piece_catalog_flip_changes_symmetric_axis_when_possible():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    t_tetromino = response.json()["pieces"][6]
+    assert t_tetromino["flip_to"][0] == 2
+    assert t_tetromino["flip_to"][2] == 0
+
+
+def test_web_orchestrator_piece_catalog_distinguishes_pieces_11_and_15():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    pieces = {piece["piece_id"]: piece for piece in response.json()["pieces"]}
+    assert pieces[11]["shape"] != pieces[15]["shape"]
+    assert {_grid_key(grid) for grid in pieces[11]["orientations"]} != {
+        _grid_key(grid) for grid in pieces[15]["orientations"]
+    }
+
+
+def test_web_orchestrator_piece_catalog_has_unique_orientation_sets():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    signatures = [
+        tuple(sorted(_grid_key(grid) for grid in piece["orientations"]))
+        for piece in response.json()["pieces"]
+    ]
+    assert len(signatures) == len(set(signatures))
+
+
+def test_web_orchestrator_piece_catalog_targeted_flips_are_visible():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    pieces = {piece["piece_id"]: piece for piece in response.json()["pieces"]}
+    for piece_id in (6, 9, 11, 15):
+        piece = pieces[piece_id]
+        for orientation_index in (0, 2):
+            target_index = piece["flip_to"][orientation_index]
+            assert target_index != orientation_index
+            assert piece["orientations"][target_index] != piece["orientations"][orientation_index]
+
+
+def test_web_orchestrator_piece_catalog_transition_indexes_are_in_range():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    for piece in response.json()["pieces"]:
+        orientation_count = len(piece["orientations"])
+        assert len(piece["rotate_to"]) == orientation_count
+        assert len(piece["flip_to"]) == orientation_count
+        assert all(0 <= index < orientation_count for index in piece["rotate_to"])
+        assert all(0 <= index < orientation_count for index in piece["flip_to"])
+
+
+def test_web_orchestrator_piece_catalog_transitions_match_grid_transforms():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    for piece in response.json()["pieces"]:
+        orientations = piece["orientations"]
+        for index, grid in enumerate(orientations):
+            assert orientations[piece["rotate_to"][index]] == _rotate_grid(grid)
+            horizontal = _reflect_horizontal(grid)
+            vertical = _reflect_vertical(grid)
+            if horizontal != grid:
+                expected_flip = horizontal
+            elif vertical != grid:
+                expected_flip = vertical
+            else:
+                expected_flip = grid
+            assert orientations[piece["flip_to"][index]] == expected_flip
 
 
 def test_web_orchestrator_move_submits_to_session():

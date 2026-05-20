@@ -120,7 +120,12 @@ function renderPreview(pieceId, colorHex) {
     preview.appendChild(meta);
 
     const wrap = document.createElement('div');
-    renderPieceGrid(pieceId, wrap, { cellSize: 18, colorHex, className: 'preview-grid' });
+    renderPieceGrid(pieceId, wrap, {
+        cellSize: 18,
+        colorHex,
+        className: 'preview-grid',
+        orientationIndex: currentOrientation,
+    });
     preview.appendChild(wrap);
 
     const orient = document.createElement('div');
@@ -171,21 +176,17 @@ async function submitMove(move) {
 }
 
 document.addEventListener('keydown', (e) => {
+    if (selectedPiece === null || selectedPiece === undefined) return;
+
     if (e.key === 'r' || e.key === 'R') {
-        currentOrientation = (currentOrientation + 1) % 4;
-        if (selectedPiece !== null) {
-            const el = document.querySelector(`#player-tray .piece[data-piece-id="${selectedPiece}"]`);
-            const colorHex = el ? getComputedStyle(el.querySelector('.pc') || el).backgroundColor : '#14151a';
-            renderPreview(selectedPiece, colorHex);
-        }
+        currentOrientation = rotateOrientationIndex(selectedPiece, currentOrientation);
+        const colorHex = PLAYER_HEX[PLAYER_COLORS[currentPlayerId]] || '#14151a';
+        renderPreview(selectedPiece, colorHex);
     }
     if (e.key === 'f' || e.key === 'F') {
-        currentOrientation = (currentOrientation + 2) % 4;
-        if (selectedPiece !== null) {
-            const el = document.querySelector(`#player-tray .piece[data-piece-id="${selectedPiece}"]`);
-            const colorHex = el ? getComputedStyle(el.querySelector('.pc') || el).backgroundColor : '#14151a';
-            renderPreview(selectedPiece, colorHex);
-        }
+        currentOrientation = flipOrientationIndex(selectedPiece, currentOrientation);
+        const colorHex = PLAYER_HEX[PLAYER_COLORS[currentPlayerId]] || '#14151a';
+        renderPreview(selectedPiece, colorHex);
     }
 });
 
