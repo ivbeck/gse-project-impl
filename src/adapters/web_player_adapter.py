@@ -1,12 +1,8 @@
 from __future__ import annotations
 import asyncio
 import threading
-from typing import TYPE_CHECKING
 from core.ports import PlayerInput
 from core.types import Move
-
-if TYPE_CHECKING:
-    from core.game_session import GameSession
 
 
 class WebPlayerAdapter(PlayerInput):

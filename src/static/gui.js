@@ -3,6 +3,14 @@ let currentOrientation = 0;
 let legalMoves = [];
 let currentPlayerId = 0;
 let roundCounter = 1;
+let currentBoard = [];
+let hoverAnchor = null;
+
+const HOVER_PREVIEW_CLASSES = [
+    'hover-preview-valid',
+    'hover-preview-invalid',
+    'hover-preview-occupied',
+];
 
 const COLOR_LABEL = { blue: 'Blue', yellow: 'Yellow', red: 'Red', green: 'Green' };
 
@@ -38,9 +46,13 @@ function updateTurnBanner(state) {
 
 function renderBoard(board) {
     const container = document.getElementById('board');
+    currentBoard = board.map(row => row.slice());
     container.innerHTML = '';
     const cols = board[0].length;
     container.style.gridTemplateColumns = `repeat(${cols}, 26px)`;
+    container.onmouseover = renderHoverPreviewFromEvent;
+    container.onmousemove = renderHoverPreviewFromEvent;
+    container.onmouseleave = clearHoverPreview;
     board.forEach((row, ri) => {
         row.forEach((cell, ci) => {
             const div = document.createElement('div');
@@ -62,6 +74,94 @@ function renderBoard(board) {
             container.appendChild(div);
         });
     });
+    if (hoverAnchor && selectedPiece !== null && selectedPiece !== undefined) {
+        renderHoverPreview(hoverAnchor.row, hoverAnchor.col);
+    }
+}
+
+function clearHoverPreviewClasses() {
+    document.querySelectorAll('#board .cell').forEach(cell => {
+        HOVER_PREVIEW_CLASSES.forEach(className => cell.classList.remove(className));
+        cell.style.removeProperty('--preview-color');
+    });
+}
+
+function clearHoverPreview() {
+    hoverAnchor = null;
+    clearHoverPreviewClasses();
+}
+
+function renderHoverPreviewFromEvent(event) {
+    const cell = event.target.closest('.cell');
+    const board = document.getElementById('board');
+    if (!cell || !board.contains(cell)) return;
+
+    const row = Number(cell.dataset.row);
+    const col = Number(cell.dataset.col);
+    if (Number.isNaN(row) || Number.isNaN(col)) return;
+
+    renderHoverPreview(row, col);
+}
+
+function getSelectedOrientationCells() {
+    if (selectedPiece === null || selectedPiece === undefined) return [];
+    const shape = getPieceOrientation(selectedPiece, currentOrientation);
+    if (!shape) return [];
+
+    const cells = [];
+    shape.forEach((row, rowOffset) => {
+        row.forEach((cell, colOffset) => {
+            if (cell) cells.push({ rowOffset, colOffset });
+        });
+    });
+    return cells;
+}
+
+function isPreviewCellOnBoard(row, col) {
+    return row >= 0 &&
+        col >= 0 &&
+        row < currentBoard.length &&
+        currentBoard[row] !== undefined &&
+        col < currentBoard[row].length;
+}
+
+function getBoardCell(row, col) {
+    return document.querySelector(`#board .cell[data-row="${row}"][data-col="${col}"]`);
+}
+
+function renderHoverPreview(anchorRow, anchorCol) {
+    clearHoverPreviewClasses();
+    hoverAnchor = { row: anchorRow, col: anchorCol };
+    if (selectedPiece === null || selectedPiece === undefined) return;
+
+    const selectedCells = getSelectedOrientationCells();
+    if (selectedCells.length === 0) return;
+
+    const previewCells = selectedCells.map(cell => ({
+        row: anchorRow + cell.rowOffset,
+        col: anchorCol + cell.colOffset,
+    }));
+    const hasOffBoardCell = previewCells.some(cell => !isPreviewCellOnBoard(cell.row, cell.col));
+    const hasOccupiedCell = previewCells.some(cell =>
+        isPreviewCellOnBoard(cell.row, cell.col) &&
+        currentBoard[cell.row][cell.col] !== null &&
+        currentBoard[cell.row][cell.col] !== undefined
+    );
+    const placementClass = hasOffBoardCell || hasOccupiedCell
+        ? 'hover-preview-invalid'
+        : 'hover-preview-valid';
+    const colorHex = PLAYER_HEX[PLAYER_COLORS[currentPlayerId]] || '#14151a';
+
+    previewCells.forEach(cell => {
+        if (!isPreviewCellOnBoard(cell.row, cell.col)) return;
+        const cellElement = getBoardCell(cell.row, cell.col);
+        if (!cellElement) return;
+        cellElement.style.setProperty('--preview-color', colorHex);
+        cellElement.classList.add(placementClass);
+        if (currentBoard[cell.row][cell.col] !== null && currentBoard[cell.row][cell.col] !== undefined) {
+            cellElement.classList.add('hover-preview-occupied');
+        }
+    });
 }
 
 function renderTray(player) {
@@ -69,6 +169,9 @@ function renderTray(player) {
     tray.innerHTML = '';
     const colorKey = player.color.toLowerCase();
     const colorHex = PLAYER_HEX[colorKey] || '#14151a';
+    if (selectedPiece !== null && selectedPiece !== undefined && !player.remaining_pieces.includes(selectedPiece)) {
+        deselectPiece();
+    }
     player.remaining_pieces.forEach(pid => {
         const div = document.createElement('div');
         div.className = 'piece';
@@ -134,13 +237,26 @@ function renderPreview(pieceId, colorHex) {
     preview.appendChild(orient);
 }
 
+function deselectPiece() {
+    selectedPiece = null;
+    currentOrientation = 0;
+    document.querySelectorAll('#player-tray .piece').forEach(p => p.classList.remove('selected'));
+    clearHoverPreview();
+    renderPreview(null);
+}
+
 function selectPiece(pieceId, colorHex) {
+    if (selectedPiece === pieceId) {
+        deselectPiece();
+        return;
+    }
     selectedPiece = pieceId;
     currentOrientation = 0;
     document.querySelectorAll('#player-tray .piece').forEach(p => p.classList.remove('selected'));
     const el = document.querySelector(`#player-tray .piece[data-piece-id="${pieceId}"]`);
     if (el) el.classList.add('selected');
     renderPreview(pieceId, colorHex || '#14151a');
+    if (hoverAnchor) renderHoverPreview(hoverAnchor.row, hoverAnchor.col);
 }
 
 function onCellClick(row, col) {
@@ -163,9 +279,7 @@ async function submitMove(move) {
         });
         const result = await resp.json();
         if (result.ok) {
-            selectedPiece = null;
-            currentOrientation = 0;
-            renderPreview(null);
+            deselectPiece();
             loadState();
         } else {
             alert(result.error || 'Illegal move');
@@ -182,11 +296,13 @@ document.addEventListener('keydown', (e) => {
         currentOrientation = rotateOrientationIndex(selectedPiece, currentOrientation);
         const colorHex = PLAYER_HEX[PLAYER_COLORS[currentPlayerId]] || '#14151a';
         renderPreview(selectedPiece, colorHex);
+        if (hoverAnchor) renderHoverPreview(hoverAnchor.row, hoverAnchor.col);
     }
     if (e.key === 'f' || e.key === 'F') {
         currentOrientation = flipOrientationIndex(selectedPiece, currentOrientation);
         const colorHex = PLAYER_HEX[PLAYER_COLORS[currentPlayerId]] || '#14151a';
         renderPreview(selectedPiece, colorHex);
+        if (hoverAnchor) renderHoverPreview(hoverAnchor.row, hoverAnchor.col);
     }
 });
 

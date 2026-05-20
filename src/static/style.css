@@ -292,6 +292,41 @@ body {
 .cell.red    { background: var(--red); }
 .cell.green  { background: var(--green); }
 
+.cell.hover-preview-valid::before,
+.cell.hover-preview-invalid::before,
+.cell.hover-preview-occupied::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cell.hover-preview-valid::before {
+    background: var(--preview-color, var(--ink));
+    opacity: 0.48;
+    box-shadow: inset 0 0 0 1px rgba(20, 21, 26, 0.32);
+}
+
+.cell.hover-preview-invalid::before {
+    inset: 2px;
+    border: 2px solid var(--red);
+    background: repeating-linear-gradient(
+        135deg,
+        rgba(156, 58, 58, 0.28) 0,
+        rgba(156, 58, 58, 0.28) 4px,
+        rgba(255, 255, 255, 0.58) 4px,
+        rgba(255, 255, 255, 0.58) 8px
+    );
+}
+
+.cell.hover-preview-occupied::before {
+    inset: 2px;
+    border: 2px solid var(--ink);
+    background: transparent;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.78);
+}
+
 /* Starting corners — subtle markers */
 .cell.corner-marker::after {
     content: "";
