@@ -16,6 +16,7 @@ src/adapters/web_presentation_adapter.py
 src/blokus_engine.egg-info/PKG-INFO
 src/blokus_engine.egg-info/SOURCES.txt
 src/blokus_engine.egg-info/dependency_links.txt
+src/blokus_engine.egg-info/entry_points.txt
 src/blokus_engine.egg-info/requires.txt
 src/blokus_engine.egg-info/top_level.txt
 src/core/__init__.py
