@@ -1,6 +1,8 @@
 from __future__ import annotations
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from core.types import Move, MoveResult
 
@@ -8,13 +10,21 @@ from core.types import Move, MoveResult
 def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
     app = FastAPI(title="Blokus Web GUI")
 
+    base_path = Path(__file__).parent.parent
+    templates_path = base_path / "templates"
+    static_path = base_path / "static"
+
     @app.get("/health")
     def health():
         return {"status": "ok"}
 
     @app.get("/")
     def index():
-        return HTMLResponse("<html><body>Blokus</body></html>")
+        with open(templates_path / "game.html") as f:
+            return HTMLResponse(f.read())
+
+    if static_path.exists():
+        app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
     @app.get("/state")
     def state():
