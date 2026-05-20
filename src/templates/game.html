@@ -3,28 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blokus</title>
+    <title>Blokus — Strategic Placement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div id="app">
-        <div class="header">
-            <h1>Blokus</h1>
-            <div class="turn-indicator">Player <span id="current-player">Blue</span>'s turn</div>
-        </div>
-        <div class="game-container">
-            <div class="sidebar left">
-                <div id="player-info"></div>
-                <div id="player-tray"></div>
+        <header class="masthead">
+            <div class="masthead-left">
+                <div class="brand">
+                    <span class="brand-mark"></span>
+                    <span class="brand-name">Blokus</span>
+                    <span class="brand-divider"></span>
+                    <span class="brand-tag">Strategic Placement Engine</span>
+                </div>
             </div>
-            <div class="board-container">
-                <div id="board"></div>
+            <div class="masthead-right">
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    <span class="status-label">Live Session</span>
+                </div>
+                <div class="session-meta">
+                    <span class="meta-label">Round</span>
+                    <span class="meta-value" id="round-counter">01</span>
+                </div>
             </div>
-            <div class="sidebar right">
-                <div id="dashboard"></div>
-                <div id="piece-preview"></div>
+        </header>
+
+        <div class="rule rule-thick"></div>
+
+        <section class="turn-banner">
+            <div class="turn-kicker">Active Turn</div>
+            <div class="turn-headline">
+                <span class="turn-swatch" id="turn-swatch"></span>
+                <span class="turn-name" id="current-player">Blue</span>
+                <span class="turn-suffix">to move</span>
             </div>
-        </div>
+            <div class="turn-hints">
+                <kbd>R</kbd> rotate &middot; <kbd>F</kbd> flip &middot; click cell to place
+            </div>
+        </section>
+
+        <div class="rule"></div>
+
+        <main class="game-container">
+            <aside class="sidebar left">
+                <section class="panel">
+                    <h2 class="panel-title"><span class="panel-num">01</span> Player Tray</h2>
+                    <p class="panel-sub">Remaining inventory</p>
+                    <div id="player-tray"></div>
+                </section>
+            </aside>
+
+            <section class="board-stage">
+                <div class="board-frame">
+                    <div class="board-coords-x" aria-hidden="true"></div>
+                    <div class="board-row">
+                        <div class="board-coords-y" aria-hidden="true"></div>
+                        <div id="board"></div>
+                    </div>
+                </div>
+                <div class="board-caption">
+                    <span class="caption-kicker">Figure 01</span>
+                    <span class="caption-text">20&times;20 Placement Grid</span>
+                </div>
+            </section>
+
+            <aside class="sidebar right">
+                <section class="panel">
+                    <h2 class="panel-title"><span class="panel-num">02</span> Standings</h2>
+                    <p class="panel-sub">Live score & inventory</p>
+                    <div id="dashboard"></div>
+                </section>
+                <section class="panel">
+                    <h2 class="panel-title"><span class="panel-num">03</span> Selection</h2>
+                    <p class="panel-sub">Current piece preview</p>
+                    <div id="piece-preview">
+                        <div class="empty-preview">No piece selected</div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+        <div class="rule"></div>
+
+        <footer class="footer">
+            <div class="footer-left">
+                <span class="footer-mark">&copy;</span>
+                <span>Blokus Strategic Placement Engine</span>
+            </div>
+            <div class="footer-right">
+                <span class="footer-kbd">Build 1.0</span>
+                <span class="footer-kbd">v.2026</span>
+            </div>
+        </footer>
     </div>
     <script src="/static/pieces.js"></script>
     <script src="/static/gui.js"></script>

@@ -24,20 +24,38 @@ const PIECES = {
 
 const PLAYER_COLORS = ['blue', 'yellow', 'red', 'green'];
 
-function renderPieceDiv(pieceId, container) {
+const PLAYER_HEX = {
+    blue:   '#1f3a68',
+    yellow: '#b8862a',
+    red:    '#9c3a3a',
+    green:  '#2f5a3f',
+};
+
+function renderPieceGrid(pieceId, container, opts = {}) {
     const shape = PIECES[pieceId];
     if (!shape) return;
+    const cellSize = opts.cellSize || 6;
+    const colorHex = opts.colorHex || '#14151a';
+    const className = opts.className || 'piece-grid';
     container.innerHTML = '';
-    container.style.display = 'grid';
-    container.style.gridTemplateRows = `repeat(${shape.length}, 20px)`;
-    container.style.gridTemplateColumns = `repeat(${shape[0].length}, 20px)`;
+    const grid = document.createElement('div');
+    grid.className = className;
+    grid.style.gridTemplateRows = `repeat(${shape.length}, ${cellSize}px)`;
+    grid.style.gridTemplateColumns = `repeat(${shape[0].length}, ${cellSize}px)`;
     shape.forEach(row => {
         row.forEach(cell => {
-            const div = document.createElement('div');
-            div.style.width = '20px';
-            div.style.height = '20px';
-            div.style.background = cell ? 'currentColor' : 'transparent';
-            container.appendChild(div);
+            const c = document.createElement('div');
+            c.className = 'pc';
+            c.style.width = `${cellSize}px`;
+            c.style.height = `${cellSize}px`;
+            c.style.background = cell ? colorHex : 'transparent';
+            grid.appendChild(c);
         });
     });
+    container.appendChild(grid);
+}
+
+/* Legacy alias used by gui.js render path */
+function renderPieceDiv(pieceId, container) {
+    renderPieceGrid(pieceId, container, { cellSize: 6, colorHex: 'currentColor' });
 }

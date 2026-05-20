@@ -1,0 +1,1054 @@
+╭─── Claude Code v2.1.144 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                 Welcome back Iven!                 │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ Added `claude agents -… │
+│   Opus 4.7 · Claude Pro · ivenbeck@outlook.de's    │ Added `agent_id` and `… │
+│   Organization                                     │ Status line JSON input… │
+│         ~/coding/projects/gse-project-impl         │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+❯ /clear                                                                        
+  ⎿  (no content)
+
+❯ /frontend-design:frontend-design Make the web ui very clean, polished,        
+corporate. MAKE NO MISTAKES OR YOUR FAMILY WILL DIE.                            
+
+  Searched for 3 patterns, read 4 files (ctrl+o to expand)
+
+● UI Blokus game. Current = dark gamer aesthetic. Redesign target = clean
+  corporate editorial. Direction: Swiss/Stripe/financial-dashboard refinement.
+  Off-white paper bg, charcoal text, hairline rules, Fraunces serif display +
+  Hanken Grotesk body + JetBrains Mono tabular. Player colors retuned to
+  sophisticated tones. Sharp grid, micro-typography labels, generous whitespace.
+
+  Rewriting HTML, CSS, JS now.
+
+● Write(src/templates/game.html)
+  ⎿  Added 90 lines, removed 16 lines
+        3  <head>
+        4      <meta charset="UTF-8">
+        5      <meta name="viewport" content="width=device-width, initial
+           -scale=1.0">
+        6 -    <title>Blokus</title>                                     
+        6 +    <title>Blokus — Strategic Placement</title>               
+        7 +    <link rel="preconnect" href="https://fonts.googleapis.com"
+          +>                                                             
+        8 +    <link rel="preconnect" href="https://fonts.gstatic.com" cr
+          +ossorigin>                                                    
+        9 +    <link href="https://fonts.googleapis.com/css2?family=Fraun
+          +ces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&fami
+          +ly=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mo
+          +no:wght@400;500;600&display=swap" rel="stylesheet">           
+       10      <link rel="stylesheet" href="/static/style.css">
+       11  </head>
+       12  <body>
+       13      <div id="app">
+       11 -        <div class="header">                                  
+       12 -            <h1>Blokus</h1>                                   
+       13 -            <div class="turn-indicator">Player <span id="curre
+          -nt-player">Blue</span>'s turn</div>                           
+       14 -        </div>                                                
+       15 -        <div class="game-container">                          
+       16 -            <div class="sidebar left">                        
+       17 -                <div id="player-info"></div>                  
+       18 -                <div id="player-tray"></div>                  
+       14 +        <header class="masthead">                             
+       15 +            <div class="masthead-left">                       
+       16 +                <div class="brand">                           
+       17 +                    <span class="brand-mark"></span>          
+       18 +                    <span class="brand-name">Blokus</span>    
+       19 +                    <span class="brand-divider"></span>       
+       20 +                    <span class="brand-tag">Strategic Placemen
+          +t Engine</span>                                               
+       21 +                </div>                                        
+       22              </div>
+       20 -            <div class="board-container">                     
+       21 -                <div id="board"></div>                        
+       23 +            <div class="masthead-right">                      
+       24 +                <div class="status-pill">                     
+       25 +                    <span class="status-dot"></span>          
+       26 +                    <span class="status-label">Live Session</s
+          +pan>                                                          
+       27 +                </div>                                        
+       28 +                <div class="session-meta">                    
+       29 +                    <span class="meta-label">Round</span>     
+       30 +                    <span class="meta-value" id="round-counter
+          +">01</span>                                                   
+       31 +                </div>                                        
+       32              </div>
+       23 -            <div class="sidebar right">                       
+       24 -                <div id="dashboard"></div>                    
+       25 -                <div id="piece-preview"></div>                
+       33 +        </header>                                             
+       34 +                                                              
+       35 +        <div class="rule rule-thick"></div>                   
+       36 +                                                              
+       37 +        <section class="turn-banner">                         
+       38 +            <div class="turn-kicker">Active Turn</div>        
+       39 +            <div class="turn-headline">                       
+       40 +                <span class="turn-swatch" id="turn-swatch"></s
+          +pan>                                                          
+       41 +                <span class="turn-name" id="current-player">Bl
+          +ue</span>                                                     
+       42 +                <span class="turn-suffix">to move</span>      
+       43              </div>
+       27 -        </div>                                                
+       44 +            <div class="turn-hints">                          
+       45 +                <kbd>R</kbd> rotate &middot; <kbd>F</kbd> flip
+          + &middot; click cell to place                                 
+       46 +            </div>                                            
+       47 +        </section>                                            
+       48 +                                                              
+       49 +        <div class="rule"></div>                              
+       50 +                                                              
+       51 +        <main class="game-container">                         
+       52 +            <aside class="sidebar left">                      
+       53 +                <section class="panel">                       
+       54 +                    <h2 class="panel-title"><span class="panel
+          +-num">01</span> Player Tray</h2>                              
+       55 +                    <p class="panel-sub">Remaining inventory</
+          +p>                                                            
+       56 +                    <div id="player-tray"></div>              
+       57 +                </section>                                    
+       58 +            </aside>                                          
+       59 +                                                              
+       60 +            <section class="board-stage">                     
+       61 +                <div class="board-frame">                     
+       62 +                    <div class="board-coords-x" aria-hidden="t
+          +rue"></div>                                                   
+       63 +                    <div class="board-row">                   
+       64 +                        <div class="board-coords-y" aria-hidde
+          +n="true"></div>                                               
+       65 +                        <div id="board"></div>                
+       66 +                    </div>                                    
+       67 +                </div>                                        
+       68 +                <div class="board-caption">                   
+       69 +                    <span class="caption-kicker">Figure 01</sp
+          +an>                                                           
+       70 +                    <span class="caption-text">20&times;20 Pla
+          +cement Grid</span>                                            
+       71 +                </div>                                        
+       72 +            </section>                                        
+       73 +                                                              
+       74 +            <aside class="sidebar right">                     
+       75 +                <section class="panel">                       
+       76 +                    <h2 class="panel-title"><span class="panel
+          +-num">02</span> Standings</h2>                                
+       77 +                    <p class="panel-sub">Live score & inventor
+          +y</p>                                                         
+       78 +                    <div id="dashboard"></div>                
+       79 +                </section>                                    
+       80 +                <section class="panel">                       
+       81 +                    <h2 class="panel-title"><span class="panel
+          +-num">03</span> Selection</h2>                                
+       82 +                    <p class="panel-sub">Current piece preview
+          +</p>                                                          
+       83 +                    <div id="piece-preview">                  
+       84 +                        <div class="empty-preview">No piece se
+          +lected</div>                                                  
+       85 +                    </div>                                    
+       86 +                </section>                                    
+       87 +            </aside>                                          
+       88 +        </main>                                               
+       89 +                                                              
+       90 +        <div class="rule"></div>                              
+       91 +                                                              
+       92 +        <footer class="footer">                               
+       93 +            <div class="footer-left">                         
+       94 +                <span class="footer-mark">&copy;</span>       
+       95 +                <span>Blokus Strategic Placement Engine</span>
+       96 +            </div>                                            
+       97 +            <div class="footer-right">                        
+       98 +                <span class="footer-kbd">Build 1.0</span>     
+       99 +                <span class="footer-kbd">v.2026</span>        
+      100 +            </div>                                            
+      101 +        </footer>                                             
+      102      </div>
+      103      <script src="/static/pieces.js"></script>
+      104      <script src="/static/gui.js"></script>
+      105  </body>
+       32 -</html>                                                       
+      106   No newline at end of file
+      107 +</html>                                                       
+
+● Write(src/static/style.css)
+  ⎿  Added 429 lines, removed 66 lines
+        1  :root {
+        2 -    --blue: #3b82f6;                                          
+        3 -    --yellow: #facc15;                                        
+        4 -    --red: #ef4444;                                           
+        5 -    --green: #22c55e;                                         
+        6 -    --bg-dark: #1a1a2e;                                       
+        7 -    --bg-cell: #16213e;                                       
+        8 -    --grid-line: #2a2a4a;                                     
+        2 +    /* Player tones — refined corporate palette */            
+        3 +    --blue: #1f3a68;                                          
+        4 +    --blue-soft: #c8d3e3;                                     
+        5 +    --yellow: #b8862a;                                        
+        6 +    --yellow-soft: #ead9a8;                                   
+        7 +    --red: #9c3a3a;                                           
+        8 +    --red-soft: #e3c5c5;                                      
+        9 +    --green: #2f5a3f;                                         
+       10 +    --green-soft: #c4d7c8;                                    
+       11 +                                                              
+       12 +    /* Surface */                                             
+       13 +    --paper: #f6f4ee;                                         
+       14 +    --paper-2: #ecebe4;                                       
+       15 +    --ink: #14151a;                                           
+       16 +    --ink-2: #4a4d57;                                         
+       17 +    --ink-3: #8a8d96;                                         
+       18 +    --rule: #d6d3c8;                                          
+       19 +    --rule-strong: #14151a;                                   
+       20 +    --cell-bg: #ffffff;                                       
+       21 +    --cell-hover: #efece2;                                    
+       22 +                                                              
+       23 +    /* Type */                                                
+       24 +    --font-display: 'Fraunces', Georgia, serif;               
+       25 +    --font-body: 'Hanken Grotesk', system-ui, sans-serif;     
+       26 +    --font-mono: 'JetBrains Mono', ui-monospace, monospace;   
+       27  }
+       28  
+       29  * { margin: 0; padding: 0; box-sizing: border-box; }
+       30  
+       31 +html { font-size: 15px; }                                     
+       32 +                                                              
+       33  body {
+       14 -    font-family: 'Segoe UI', system-ui, sans-serif;           
+       15 -    background: var(--bg-dark);                               
+       16 -    color: #fff;                                              
+       34 +    font-family: var(--font-body);                            
+       35 +    background:                                               
+       36 +        repeating-linear-gradient(0deg, transparent 0, transpa
+          +rent 31px, rgba(20,21,26,0.025) 31px, rgba(20,21,26,0.025) 32p
+          +x),                                                           
+       37 +        var(--paper);                                         
+       38 +    color: var(--ink);                                        
+       39      min-height: 100vh;
+       40 +    font-weight: 400;                                         
+       41 +    letter-spacing: -0.005em;                                 
+       42 +    -webkit-font-smoothing: antialiased;                      
+       43 +    -moz-osx-font-smoothing: grayscale;                       
+       44  }
+       45  
+       20 -#app { padding: 20px; }                                       
+       46 +#app {                                                        
+       47 +    max-width: 1440px;                                        
+       48 +    margin: 0 auto;                                           
+       49 +    padding: 28px 40px 24px;                                  
+       50 +}                                                             
+       51  
+       22 -.header {                                                     
+       52 +/* ── Masthead ─────────────────────────────────── */         
+       53 +.masthead {                                                   
+       54      display: flex;
+       55      justify-content: space-between;
+       56 +    align-items: flex-end;                                    
+       57 +    padding-bottom: 14px;                                     
+       58 +}                                                             
+       59 +.masthead-left .brand {                                       
+       60 +    display: flex;                                            
+       61      align-items: center;
+       26 -    margin-bottom: 20px;                                      
+       62 +    gap: 12px;                                                
+       63  }
+       64 +.brand-mark {                                                 
+       65 +    width: 14px;                                              
+       66 +    height: 14px;                                             
+       67 +    background: var(--ink);                                   
+       68 +    display: inline-block;                                    
+       69 +    transform: rotate(45deg);                                 
+       70 +}                                                             
+       71 +.brand-name {                                                 
+       72 +    font-family: var(--font-display);                         
+       73 +    font-size: 1.65rem;                                       
+       74 +    font-weight: 500;                                         
+       75 +    font-variation-settings: "opsz" 144;                      
+       76 +    letter-spacing: -0.02em;                                  
+       77 +    line-height: 1;                                           
+       78 +}                                                             
+       79 +.brand-divider {                                              
+       80 +    width: 1px;                                               
+       81 +    height: 18px;                                             
+       82 +    background: var(--rule);                                  
+       83 +    margin: 0 4px;                                            
+       84 +}                                                             
+       85 +.brand-tag {                                                  
+       86 +    font-family: var(--font-mono);                            
+       87 +    font-size: 0.7rem;                                        
+       88 +    text-transform: uppercase;                                
+       89 +    letter-spacing: 0.12em;                                   
+       90 +    color: var(--ink-2);                                      
+       91 +}                                                             
+       92 +.masthead-right {                                             
+       93 +    display: flex;                                            
+       94 +    align-items: center;                                      
+       95 +    gap: 24px;                                                
+       96 +}                                                             
+       97 +.status-pill {                                                
+       98 +    display: flex;                                            
+       99 +    align-items: center;                                      
+      100 +    gap: 8px;                                                 
+      101 +    padding: 5px 11px;                                        
+      102 +    border: 1px solid var(--rule);                            
+      103 +    border-radius: 999px;                                     
+      104 +    font-size: 0.72rem;                                       
+      105 +    text-transform: uppercase;                                
+      106 +    letter-spacing: 0.1em;                                    
+      107 +    color: var(--ink-2);                                      
+      108 +}                                                             
+      109 +.status-dot {                                                 
+      110 +    width: 6px;                                               
+      111 +    height: 6px;                                              
+      112 +    background: #2f7d4e;                                      
+      113 +    border-radius: 50%;                                       
+      114 +    box-shadow: 0 0 0 3px rgba(47, 125, 78, 0.18);            
+      115 +    animation: pulse 2.4s ease-in-out infinite;               
+      116 +}                                                             
+      117 +@keyframes pulse {                                            
+      118 +    0%, 100% { box-shadow: 0 0 0 3px rgba(47, 125, 78, 0.18); 
+          +}                                                             
+      119 +    50% { box-shadow: 0 0 0 6px rgba(47, 125, 78, 0.05); }    
+      120 +}                                                             
+      121 +.session-meta {                                               
+      122 +    display: flex;                                            
+      123 +    align-items: baseline;                                    
+      124 +    gap: 8px;                                                 
+      125 +}                                                             
+      126 +.meta-label {                                                 
+      127 +    font-family: var(--font-mono);                            
+      128 +    font-size: 0.7rem;                                        
+      129 +    text-transform: uppercase;                                
+      130 +    letter-spacing: 0.12em;                                   
+      131 +    color: var(--ink-3);                                      
+      132 +}                                                             
+      133 +.meta-value {                                                 
+      134 +    font-family: var(--font-mono);                            
+      135 +    font-size: 0.95rem;                                       
+      136 +    font-weight: 500;                                         
+      137 +    color: var(--ink);                                        
+      138 +    font-variant-numeric: tabular-nums;                       
+      139 +}                                                             
+      140  
+       29 -.turn-indicator {                                             
+       30 -    font-size: 1.2em;                                         
+       31 -    padding: 8px 16px;                                        
+       32 -    border-radius: 8px;                                       
+       33 -    background: rgba(255,255,255,0.1);                        
+      141 +/* ── Rules ────────────────────────────────────── */         
+      142 +.rule { height: 1px; background: var(--rule); width: 100%; }  
+      143 +.rule-thick { height: 2px; background: var(--rule-strong); wid
+          +th: 100%; }                                                   
+      144 +                                                              
+      145 +/* ── Turn banner ──────────────────────────────── */         
+      146 +.turn-banner {                                                
+      147 +    display: grid;                                            
+      148 +    grid-template-columns: auto 1fr auto;                     
+      149 +    align-items: center;                                      
+      150 +    gap: 32px;                                                
+      151 +    padding: 28px 4px 26px;                                   
+      152  }
+      153 +.turn-kicker {                                                
+      154 +    font-family: var(--font-mono);                            
+      155 +    font-size: 0.7rem;                                        
+      156 +    text-transform: uppercase;                                
+      157 +    letter-spacing: 0.14em;                                   
+      158 +    color: var(--ink-3);                                      
+      159 +}                                                             
+      160 +.turn-headline {                                              
+      161 +    display: flex;                                            
+      162 +    align-items: baseline;                                    
+      163 +    gap: 14px;                                                
+      164 +    font-family: var(--font-display);                         
+      165 +    font-variation-settings: "opsz" 144;                      
+      166 +    font-size: 2.25rem;                                       
+      167 +    font-weight: 400;                                         
+      168 +    letter-spacing: -0.025em;                                 
+      169 +    line-height: 1;                                           
+      170 +}                                                             
+      171 +.turn-swatch {                                                
+      172 +    width: 16px;                                              
+      173 +    height: 16px;                                             
+      174 +    background: var(--blue);                                  
+      175 +    display: inline-block;                                    
+      176 +    transform: translateY(-2px);                              
+      177 +    transition: background 0.4s ease;                         
+      178 +}                                                             
+      179 +.turn-name { font-weight: 500; }                              
+      180 +.turn-suffix {                                                
+      181 +    color: var(--ink-3);                                      
+      182 +    font-style: italic;                                       
+      183 +    font-weight: 300;                                         
+      184 +}                                                             
+      185 +.turn-hints {                                                 
+      186 +    font-family: var(--font-mono);                            
+      187 +    font-size: 0.72rem;                                       
+      188 +    color: var(--ink-2);                                      
+      189 +    letter-spacing: 0.02em;                                   
+      190 +}                                                             
+      191 +.turn-hints kbd {                                             
+      192 +    display: inline-block;                                    
+      193 +    padding: 2px 7px;                                         
+      194 +    border: 1px solid var(--rule);                            
+      195 +    border-bottom-width: 2px;                                 
+      196 +    border-radius: 3px;                                       
+      197 +    background: #fff;                                         
+      198 +    font-family: var(--font-mono);                            
+      199 +    font-size: 0.72rem;                                       
+      200 +    color: var(--ink);                                        
+      201 +    margin: 0 2px;                                            
+      202 +}                                                             
+      203  
+      204 +/* ── Game grid ────────────────────────────────── */         
+      205  .game-container {
+      206      display: grid;
+       38 -    grid-template-columns: 200px 1fr 250px;                   
+       39 -    gap: 20px;                                                
+       40 -    max-width: 1400px;                                        
+       41 -    margin: 0 auto;                                           
+      207 +    grid-template-columns: 260px 1fr 300px;                   
+      208 +    gap: 32px;                                                
+      209 +    padding: 32px 0;                                          
+      210  }
+      211  
+       44 -.board-container {                                            
+      212 +.sidebar { display: flex; flex-direction: column; gap: 28px; }
+      213 +                                                              
+      214 +/* ── Panel ────────────────────────────────────── */         
+      215 +.panel { padding-top: 4px; }                                  
+      216 +.panel-title {                                                
+      217 +    font-family: var(--font-display);                         
+      218 +    font-variation-settings: "opsz" 144;                      
+      219 +    font-size: 1.05rem;                                       
+      220 +    font-weight: 500;                                         
+      221 +    letter-spacing: -0.01em;                                  
+      222      display: flex;
+       46 -    justify-content: center;                                  
+      223 +    align-items: baseline;                                    
+      224 +    gap: 10px;                                                
+      225  }
+      226 +.panel-num {                                                  
+      227 +    font-family: var(--font-mono);                            
+      228 +    font-size: 0.7rem;                                        
+      229 +    font-weight: 500;                                         
+      230 +    color: var(--ink-3);                                      
+      231 +    letter-spacing: 0.08em;                                   
+      232 +    padding: 2px 6px;                                         
+      233 +    border: 1px solid var(--rule);                            
+      234 +    border-radius: 2px;                                       
+      235 +    transform: translateY(-2px);                              
+      236 +}                                                             
+      237 +.panel-sub {                                                  
+      238 +    font-size: 0.78rem;                                       
+      239 +    color: var(--ink-3);                                      
+      240 +    margin-top: 2px;                                          
+      241 +    margin-bottom: 16px;                                      
+      242 +    letter-spacing: 0.005em;                                  
+      243 +}                                                             
+      244  
+      245 +/* ── Board ────────────────────────────────────── */         
+      246 +.board-stage {                                                
+      247 +    display: flex;                                            
+      248 +    flex-direction: column;                                   
+      249 +    align-items: center;                                      
+      250 +    gap: 18px;                                                
+      251 +}                                                             
+      252 +.board-frame {                                                
+      253 +    background: var(--paper-2);                               
+      254 +    padding: 22px;                                            
+      255 +    border: 1px solid var(--rule);                            
+      256 +    position: relative;                                       
+      257 +}                                                             
+      258 +.board-frame::before {                                        
+      259 +    content: "";                                              
+      260 +    position: absolute;                                       
+      261 +    inset: 6px;                                               
+      262 +    border: 1px solid var(--rule);                            
+      263 +    pointer-events: none;                                     
+      264 +}                                                             
+      265 +.board-row { display: flex; }                                 
+      266 +.board-coords-x, .board-coords-y {                            
+      267 +    font-family: var(--font-mono);                            
+      268 +    font-size: 0.6rem;                                        
+      269 +    color: var(--ink-3);                                      
+      270 +    letter-spacing: 0.06em;                                   
+      271 +}                                                             
+      272  #board {
+      273      display: grid;
+       51 -    grid-template-columns: repeat(20, 28px);                  
+      274 +    grid-template-columns: repeat(20, 26px);                  
+      275      gap: 1px;
+       53 -    background: var(--grid-line);                             
+      276 +    background: var(--rule);                                  
+      277      padding: 1px;
+       55 -    border-radius: 4px;                                       
+      278 +    position: relative;                                       
+      279  }
+       57 -                                                              
+      280  .cell {
+       59 -    width: 28px;                                              
+       60 -    height: 28px;                                             
+       61 -    background: var(--bg-cell);                               
+       62 -    border-radius: 2px;                                       
+      281 +    width: 26px;                                              
+      282 +    height: 26px;                                             
+      283 +    background: var(--cell-bg);                               
+      284      cursor: pointer;
+       64 -    transition: background 0.15s;                             
+      285 +    transition: background 0.12s ease, transform 0.12s ease;  
+      286 +    position: relative;                                       
+      287  }
+      288 +.cell:hover { background: var(--cell-hover); }                
+      289  
+       67 -.cell:hover { background: #1e3a5f; }                          
+       68 -.cell.blue { background: var(--blue); box-shadow: 0 0 8px var(
+          ---blue); }                                                    
+       69 -.cell.yellow { background: var(--yellow); box-shadow: 0 0 8px 
+          -var(--yellow); }                                              
+       70 -.cell.red { background: var(--red); box-shadow: 0 0 8px var(--
+          -red); }                                                       
+       71 -.cell.green { background: var(--green); box-shadow: 0 0 8px va
+          -r(--green); }                                                 
+      290 +.cell.blue   { background: var(--blue); }                     
+      291 +.cell.yellow { background: var(--yellow); }                   
+      292 +.cell.red    { background: var(--red); }                      
+      293 +.cell.green  { background: var(--green); }                    
+      294  
+      295 +/* Starting corners — subtle markers */                       
+      296 +.cell.corner-marker::after {                                  
+      297 +    content: "";                                              
+      298 +    position: absolute;                                       
+      299 +    inset: 8px;                                               
+      300 +    border: 1px solid var(--ink-3);                           
+      301 +    opacity: 0.4;                                             
+      302 +}                                                             
+      303 +                                                              
+      304 +.board-caption {                                              
+      305 +    display: flex;                                            
+      306 +    align-items: baseline;                                    
+      307 +    gap: 14px;                                                
+      308 +    font-family: var(--font-mono);                            
+      309 +    font-size: 0.7rem;                                        
+      310 +    text-transform: uppercase;                                
+      311 +    letter-spacing: 0.12em;                                   
+      312 +}                                                             
+      313 +.caption-kicker { color: var(--ink-3); }                      
+      314 +.caption-text { color: var(--ink); }                          
+      315 +                                                              
+      316 +/* ── Player tray ──────────────────────────────── */         
+      317 +#player-tray {                                                
+      318 +    display: grid;                                            
+      319 +    grid-template-columns: repeat(4, 1fr);                    
+      320 +    gap: 8px;                                                 
+      321 +}                                                             
+      322  #player-tray .piece {
+       74 -    display: inline-block;                                    
+       75 -    width: 40px;                                              
+       76 -    height: 40px;                                             
+       77 -    background: rgba(255,255,255,0.1);                        
+       78 -    margin: 4px;                                              
+       79 -    border-radius: 4px;                                       
+      323 +    aspect-ratio: 1;                                          
+      324 +    background: #fff;                                         
+      325 +    border: 1px solid var(--rule);                            
+      326 +    display: flex;                                            
+      327 +    align-items: center;                                      
+      328 +    justify-content: center;                                  
+      329      cursor: pointer;
+       81 -    transition: transform 0.15s, box-shadow 0.15s;            
+      330 +    transition: border-color 0.15s ease, transform 0.15s ease,
+          + box-shadow 0.15s ease;                                       
+      331 +    padding: 6px;                                             
+      332 +    position: relative;                                       
+      333  }
+       83 -                                                              
+      334  #player-tray .piece:hover {
+       85 -    transform: scale(1.1);                                    
+       86 -    box-shadow: 0 0 12px rgba(255,255,255,0.3);               
+      335 +    border-color: var(--ink);                                 
+      336 +    transform: translateY(-1px);                              
+      337 +    box-shadow: 0 2px 0 var(--rule-strong);                   
+      338  }
+       88 -                                                              
+      339  #player-tray .piece.selected {
+       90 -    box-shadow: 0 0 16px var(--blue);                         
+       91 -    border: 2px solid #fff;                                   
+      340 +    border-color: var(--ink);                                 
+      341 +    border-width: 1px;                                        
+      342 +    box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink); 
+      343  }
+       93 -                                                              
+       94 -#piece-preview {                                              
+       95 -    background: rgba(255,255,255,0.05);                       
+       96 -    padding: 12px;                                            
+       97 -    border-radius: 8px;                                       
+       98 -    margin-top: 16px;                                         
+      344 +#player-tray .piece-grid {                                    
+      345 +    display: grid;                                            
+      346 +    gap: 1px;                                                 
+      347  }
+      100 -                                                              
+      101 -#dashboard {                                                  
+      102 -    background: rgba(255,255,255,0.05);                       
+      103 -    padding: 12px;                                            
+      104 -    border-radius: 8px;                                       
+      348 +#player-tray .piece-grid .pc {                                
+      349 +    width: 6px;                                               
+      350 +    height: 6px;                                              
+      351  }
+      352  
+      353 +/* ── Dashboard table ─────────────────────────── */          
+      354  #dashboard table {
+      355      width: 100%;
+      356      border-collapse: collapse;
+      357 +    font-family: var(--font-mono);                            
+      358 +    font-size: 0.78rem;                                       
+      359 +    font-variant-numeric: tabular-nums;                       
+      360  }
+      111 -                                                              
+      112 -#dashboard th, #dashboard td {                                
+      361 +#dashboard thead th {                                         
+      362      text-align: left;
+      114 -    padding: 4px 8px;                                         
+      115 -}                                                             
+      363   No newline at end of file
+      364 +    padding: 8px 0;                                           
+      365 +    font-size: 0.65rem;                                       
+      366 +    text-transform: uppercase;                                
+      367 +    letter-spacing: 0.12em;                                   
+      368 +    color: var(--ink-3);                                      
+      369 +    font-weight: 500;                                         
+      370 +    border-bottom: 1px solid var(--rule-strong);              
+      371 +    font-family: var(--font-mono);                            
+      372 +}                                                             
+      373 +#dashboard thead th.right { text-align: right; }              
+      374 +#dashboard tbody td {                                         
+      375 +    padding: 10px 0;                                          
+      376 +    border-bottom: 1px solid var(--rule);                     
+      377 +    color: var(--ink);                                        
+      378 +}                                                             
+      379 +#dashboard tbody td.right { text-align: right; }              
+      380 +#dashboard tbody tr:last-child td { border-bottom: none; }    
+      381 +#dashboard tbody tr.active td { background: var(--paper-2); } 
+      382 +#dashboard tbody tr.active td:first-child {                   
+      383 +    box-shadow: inset 3px 0 0 var(--ink);                     
+      384 +}                                                             
+      385 +#dashboard .player-cell {                                     
+      386 +    display: flex;                                            
+      387 +    align-items: center;                                      
+      388 +    gap: 8px;                                                 
+      389 +    font-family: var(--font-body);                            
+      390 +    font-size: 0.85rem;                                       
+      391 +    font-weight: 500;                                         
+      392 +    padding-left: 10px;                                       
+      393 +}                                                             
+      394 +#dashboard tbody tr:not(.active) .player-cell { padding-left: 
+          +13px; }                                                       
+      395 +#dashboard .player-swatch {                                   
+      396 +    width: 9px;                                               
+      397 +    height: 9px;                                              
+      398 +    display: inline-block;                                    
+      399 +}                                                             
+      400 +                                                              
+      401 +/* ── Piece preview ───────────────────────────── */          
+      402 +#piece-preview {                                              
+      403 +    min-height: 120px;                                        
+      404 +    border: 1px solid var(--rule);                            
+      405 +    background: #fff;                                         
+      406 +    display: flex;                                            
+      407 +    align-items: center;                                      
+      408 +    justify-content: center;                                  
+      409 +    padding: 16px;                                            
+      410 +    position: relative;                                       
+      411 +}                                                             
+      412 +#piece-preview::before {                                      
+      413 +    content: "";                                              
+      414 +    position: absolute;                                       
+      415 +    inset: 6px;                                               
+      416 +    border: 1px dashed var(--rule);                           
+      417 +    pointer-events: none;                                     
+      418 +}                                                             
+      419 +.empty-preview {                                              
+      420 +    font-family: var(--font-mono);                            
+      421 +    font-size: 0.7rem;                                        
+      422 +    text-transform: uppercase;                                
+      423 +    letter-spacing: 0.12em;                                   
+      424 +    color: var(--ink-3);                                      
+      425 +}                                                             
+      426 +#piece-preview .preview-grid {                                
+      427 +    display: grid;                                            
+      428 +    gap: 2px;                                                 
+      429 +    position: relative;                                       
+      430 +    z-index: 1;                                               
+      431 +}                                                             
+      432 +#piece-preview .preview-grid .pc {                            
+      433 +    width: 18px;                                              
+      434 +    height: 18px;                                             
+      435 +}                                                             
+      436 +.preview-meta {                                               
+      437 +    position: absolute;                                       
+      438 +    top: 10px;                                                
+      439 +    left: 12px;                                               
+      440 +    font-family: var(--font-mono);                            
+      441 +    font-size: 0.65rem;                                       
+      442 +    text-transform: uppercase;                                
+      443 +    letter-spacing: 0.12em;                                   
+      444 +    color: var(--ink-3);                                      
+      445 +    z-index: 1;                                               
+      446 +}                                                             
+      447 +.preview-orient {                                             
+      448 +    position: absolute;                                       
+      449 +    bottom: 10px;                                             
+      450 +    right: 12px;                                              
+      451 +    font-family: var(--font-mono);                            
+      452 +    font-size: 0.65rem;                                       
+      453 +    letter-spacing: 0.08em;                                   
+      454 +    color: var(--ink-3);                                      
+      455 +    z-index: 1;                                               
+      456 +}                                                             
+      457 +                                                              
+      458 +/* ── Footer ──────────────────────────────────── */          
+      459 +.footer {                                                     
+      460 +    display: flex;                                            
+      461 +    justify-content: space-between;                           
+      462 +    padding-top: 14px;                                        
+      463 +    font-family: var(--font-mono);                            
+      464 +    font-size: 0.68rem;                                       
+      465 +    text-transform: uppercase;                                
+      466 +    letter-spacing: 0.12em;                                   
+      467 +    color: var(--ink-3);                                      
+      468 +}                                                             
+      469 +.footer-left { display: flex; align-items: center; gap: 8px; }
+      470 +.footer-right { display: flex; gap: 16px; }                   
+      471 +.footer-mark { color: var(--ink); }                           
+      472 +                                                              
+      473 +/* ── Responsive ──────────────────────────────── */          
+      474 +@media (max-width: 1180px) {                                  
+      475 +    .game-container {                                         
+      476 +        grid-template-columns: 1fr;                           
+      477 +    }                                                         
+      478 +    #app { padding: 24px 20px; }                              
+      479 +}                                                             
+
+● Write(src/static/pieces.js)
+  ⎿  Added 28 lines, removed 10 lines
+      24  
+      25  const PLAYER_COLORS = ['blue', 'yellow', 'red', 'green'];
+      26  
+      27 -function renderPieceDiv(pieceId, container) {                  
+      27 +const PLAYER_HEX = {                                           
+      28 +    blue:   '#1f3a68',                                         
+      29 +    yellow: '#b8862a',                                         
+      30 +    red:    '#9c3a3a',                                         
+      31 +    green:  '#2f5a3f',                                         
+      32 +};                                                             
+      33 +                                                               
+      34 +function renderPieceGrid(pieceId, container, opts = {}) {      
+      35      const shape = PIECES[pieceId];
+      36      if (!shape) return;
+      37 +    const cellSize = opts.cellSize || 6;                       
+      38 +    const colorHex = opts.colorHex || '#14151a';               
+      39 +    const className = opts.className || 'piece-grid';          
+      40      container.innerHTML = '';
+      31 -    container.style.display = 'grid';                          
+      32 -    container.style.gridTemplateRows = `repeat(${shape.length},
+         - 20px)`;                                                       
+      33 -    container.style.gridTemplateColumns = `repeat(${shape[0].le
+         -ngth}, 20px)`;                                                 
+      41 +    const grid = document.createElement('div');                
+      42 +    grid.className = className;                                
+      43 +    grid.style.gridTemplateRows = `repeat(${shape.length}, ${ce
+         +llSize}px)`;                                                   
+      44 +    grid.style.gridTemplateColumns = `repeat(${shape[0].length}
+         +, ${cellSize}px)`;                                             
+      45      shape.forEach(row => {
+      46          row.forEach(cell => {
+      36 -            const div = document.createElement('div');         
+      37 -            div.style.width = '20px';                          
+      38 -            div.style.height = '20px';                         
+      39 -            div.style.background = cell ? 'currentColor' : 'tra
+         -nsparent';                                                     
+      40 -            container.appendChild(div);                        
+      47 +            const c = document.createElement('div');           
+      48 +            c.className = 'pc';                                
+      49 +            c.style.width = `${cellSize}px`;                   
+      50 +            c.style.height = `${cellSize}px`;                  
+      51 +            c.style.background = cell ? colorHex : 'transparent
+         +';                                                             
+      52 +            grid.appendChild(c);                               
+      53          });
+      54      });
+      43 -}                                                              
+      55   No newline at end of file
+      56 +    container.appendChild(grid);                               
+      57 +}                                                              
+      58 +                                                               
+      59 +/* Legacy alias used by gui.js render path */                  
+      60 +function renderPieceDiv(pieceId, container) {                  
+      61 +    renderPieceGrid(pieceId, container, { cellSize: 6, colorHex
+         +: 'currentColor' });                                           
+      62 +}                                                              
+
+● Write(src/static/gui.js)
+  ⎿  Added 97 lines, removed 16 lines
+       2  let currentOrientation = 0;
+       3  let legalMoves = [];
+       4  let currentPlayerId = 0;
+       5 +let roundCounter = 1;                                          
+       6  
+       7 +const COLOR_LABEL = { blue: 'Blue', yellow: 'Yellow', red: 'Red
+         +', green: 'Green' };                                           
+       8 +                                                               
+       9  async function loadState() {
+      10      try {
+      11          const resp = await fetch('/state');
+     ...
+      14          renderBoard(state.board);
+      15          renderTray(state.players[state.current_player_id]);
+      16          renderDashboard(state);
+      14 -        document.getElementById('current-player').textContent =
+         - state.players[state.current_player_id].color;                 
+      17 +        updateTurnBanner(state);                               
+      18      } catch (e) {
+      19          console.error('Failed to load state:', e);
+      20      }
+      21  }
+      22  
+      23 +function updateTurnBanner(state) {                             
+      24 +    const player = state.players[state.current_player_id];     
+      25 +    const colorKey = player.color.toLowerCase();               
+      26 +    const label = COLOR_LABEL[colorKey] || player.color;       
+      27 +    document.getElementById('current-player').textContent = lab
+         +el;                                                            
+      28 +    const swatch = document.getElementById('turn-swatch');     
+      29 +    if (swatch) swatch.style.background = PLAYER_HEX[colorKey] 
+         +|| '#14151a';                                                  
+      30 +    /* Round counter: estimate from total placed pieces */     
+      31 +    const totalPlayers = state.players.length || 4;            
+      32 +    const used = state.players.reduce((acc, p) => acc + (21 - p
+         +.remaining_pieces.length), 0);                                 
+      33 +    const round = Math.floor(used / totalPlayers) + 1;         
+      34 +    const counter = document.getElementById('round-counter');  
+      35 +    if (counter) counter.textContent = String(round).padStart(2
+         +, '0');                                                        
+      36 +}                                                              
+      37 +                                                               
+      38  function renderBoard(board) {
+      39      const container = document.getElementById('board');
+      40      container.innerHTML = '';
+      23 -    container.style.gridTemplateColumns = `repeat(${board[0].le
+         -ngth}, 28px)`;                                                 
+      41 +    const cols = board[0].length;                              
+      42 +    container.style.gridTemplateColumns = `repeat(${cols}, 26px
+         +)`;                                                            
+      43      board.forEach((row, ri) => {
+      44          row.forEach((cell, ci) => {
+      45              const div = document.createElement('div');
+      46              div.className = 'cell';
+      28 -            if (cell !== null) {                               
+      47 +            if (cell !== null && cell !== undefined) {         
+      48                  div.classList.add(PLAYER_COLORS[cell]);
+      49              }
+      50 +            /* Mark corner cells subtly */                     
+      51 +            const lastRow = board.length - 1;                  
+      52 +            const lastCol = cols - 1;                          
+      53 +            const isCorner = (ri === 0 && ci === 0) ||         
+      54 +                             (ri === 0 && ci === lastCol) ||   
+      55 +                             (ri === lastRow && ci === 0) ||   
+      56 +                             (ri === lastRow && ci === lastCol)
+         +;                                                              
+      57 +            if (isCorner && cell === null) div.classList.add('c
+         +orner-marker');                                                
+      58              div.dataset.row = ri;
+      59              div.dataset.col = ci;
+      60              div.onclick = () => onCellClick(ri, ci);
+     ...
+       66  function renderTray(player) {
+       67      const tray = document.getElementById('player-tray');
+       68      tray.innerHTML = '';
+       69 +    const colorKey = player.color.toLowerCase();              
+       70 +    const colorHex = PLAYER_HEX[colorKey] || '#14151a';       
+       71      player.remaining_pieces.forEach(pid => {
+       72          const div = document.createElement('div');
+       73          div.className = 'piece';
+       74          div.dataset.pieceId = pid;
+       46 -        div.onclick = () => selectPiece(pid);                 
+       47 -        div.style.color = PLAYER_COLORS[player.id];           
+       48 -        renderPieceDiv(pid, div);                             
+       75 +        div.onclick = () => selectPiece(pid, colorHex);       
+       76 +        renderPieceGrid(pid, div, { cellSize: 6, colorHex }); 
+       77 +        if (pid === selectedPiece) div.classList.add('selected
+          +');                                                           
+       78          tray.appendChild(div);
+       79      });
+       80  }
+       81  
+       82  function renderDashboard(state) {
+       83      const dash = document.getElementById('dashboard');
+       55 -    let html = '<table><tr><th>Player</th><th>Score</th><th>Pi
+          -eces</th></tr>';                                              
+       84 +    let html = '<table>';                                     
+       85 +    html += '<thead><tr>';                                    
+       86 +    html += '<th>Player</th>';                                
+       87 +    html += '<th class="right">Score</th>';                   
+       88 +    html += '<th class="right">Left</th>';                    
+       89 +    html += '</tr></thead><tbody>';                           
+       90      state.players.forEach(p => {
+       91          const score = state.scores.find(s => s.player_id === p
+           .id);
+       58 -        html += `<tr><td style="color:${PLAYER_COLORS[p.id]}">
+          -${p.color}</td><td>${score ? score.score : 0}</td><td>${p.rema
+          -ining_pieces.length}</td></tr>`;                              
+       92 +        const colorKey = (p.color || PLAYER_COLORS[p.id]).toLo
+          +werCase();                                                    
+       93 +        const colorHex = PLAYER_HEX[colorKey] || '#14151a';   
+       94 +        const label = COLOR_LABEL[colorKey] || p.color;       
+       95 +        const activeClass = (p.id === state.current_player_id)
+          + ? ' class="active"' : '';                                    
+       96 +        html += `<tr${activeClass}>`;                         
+       97 +        html += `<td><div class="player-cell"><span class="pla
+          +yer-swatch" style="background:${colorHex}"></span>${label}</di
+          +v></td>`;                                                     
+       98 +        html += `<td class="right">${score ? score.score : 0}<
+          +/td>`;                                                        
+       99 +        html += `<td class="right">${p.remaining_pieces.length
+          +}</td>`;                                                      
+      100 +        html += '</tr>';                                      
+      101      });
+       60 -    html += '</table>';                                       
+      102 +    html += '</tbody></table>';                               
+      103      dash.innerHTML = html;
+      104  }
+      105  
+       64 -function selectPiece(pieceId) {                               
+      106 +function renderPreview(pieceId, colorHex) {                   
+      107 +    const preview = document.getElementById('piece-preview'); 
+      108 +    preview.innerHTML = '';                                   
+      109 +    if (pieceId === null || pieceId === undefined) {          
+      110 +        const empty = document.createElement('div');          
+      111 +        empty.className = 'empty-preview';                    
+      112 +        empty.textContent = 'No piece selected';              
+      113 +        preview.appendChild(empty);                           
+      114 +        return;                                               
+      115 +    }                                                         
+      116 +    const meta = document.createElement('div');               
+      117 +    meta.className = 'preview-meta';                          
+      118 +    meta.textContent = `Piece ${String(pieceId).padStart(2, '0
+          +')}`;                                                         
+      119 +    preview.appendChild(meta);                                
+      120 +                                                              
+      121 +    const wrap = document.createElement('div');               
+      122 +    renderPieceGrid(pieceId, wrap, { cellSize: 18, colorHex, c
+          +lassName: 'preview-grid' });                                  
+      123 +    preview.appendChild(wrap);                                
+      124 +                                                              
+      125 +    const orient = document.createElement('div');             
+      126 +    orient.className = 'preview-orient';                      
+      127 +    orient.textContent = `Orient ${currentOrientation}`;      
+      128 +    preview.appendChild(orient);                              
+      129 +}                                                             
+      130 +                                                              
+      131 +function selectPiece(pieceId, colorHex) {                     
+      132      selectedPiece = pieceId;
+      133      currentOrientation = 0;
+       67 -    document.querySelectorAll('.piece').forEach(p => p.classLi
+          -st.remove('selected'));                                       
+       68 -    document.querySelector(`[data-piece-id="${pieceId}"]`).cla
+          -ssList.add('selected');                                       
+      134 +    document.querySelectorAll('#player-tray .piece').forEach(p
+          + => p.classList.remove('selected'));                          
+      135 +    const el = document.querySelector(`#player-tray .piece[dat
+          +a-piece-id="${pieceId}"]`);                                   
+      136 +    if (el) el.classList.add('selected');                     
+      137 +    renderPreview(pieceId, colorHex || '#14151a');            
+      138  }
+      139  
+      140  function onCellClick(row, col) {
+       72 -    if (!selectedPiece) return;                               
+      141 +    if (selectedPiece === null || selectedPiece === undefined)
+          + return;                                                      
+      142      submitMove({
+      143          player_id: currentPlayerId,
+      144          piece_id: selectedPiece,
+     ...
+      157          });
+      158          const result = await resp.json();
+      159          if (result.ok) {
+      160 +            selectedPiece = null;                             
+      161 +            currentOrientation = 0;                           
+      162 +            renderPreview(null);                              
+      163              loadState();
+      164          } else {
+      165              alert(result.error || 'Illegal move');
+     ...
+      172  document.addEventListener('keydown', (e) => {
+      173      if (e.key === 'r' || e.key === 'R') {
+      174          currentOrientation = (currentOrientation + 1) % 4;
+      175 +        if (selectedPiece !== null) {                         
+      176 +            const el = document.querySelector(`#player-tray .p
+          +iece[data-piece-id="${selectedPiece}"]`);                     
+      177 +            const colorHex = el ? getComputedStyle(el.querySel
+          +ector('.pc') || el).backgroundColor : '#14151a';              
+      178 +            renderPreview(selectedPiece, colorHex);           
+      179 +        }                                                     
+      180      }
+      181      if (e.key === 'f' || e.key === 'F') {
+      105 -        currentOrientation += 2;                              
+      106 -        currentOrientation %= 4;                              
+      182 +        currentOrientation = (currentOrientation + 2) % 4;    
+      183 +        if (selectedPiece !== null) {                         
+      184 +            const el = document.querySelector(`#player-tray .p
+          +iece[data-piece-id="${selectedPiece}"]`);                     
+      185 +            const colorHex = el ? getComputedStyle(el.querySel
+          +ector('.pc') || el).backgroundColor : '#14151a';              
+      186 +            renderPreview(selectedPiece, colorHex);           
+      187 +        }                                                     
+      188      }
+      189  });
+      190  
+      191  setInterval(loadState, 2000);
+      111 -loadState();                                                  
+      192   No newline at end of file
+      193 +loadState();                                                  
+
+● Tasks not needed — small bounded redesign. Verify server still references
+  correct routes/assets.
+
+  Searched for 3 patterns, read 1 file (ctrl+o to expand)
+
+● Routes match: /state, /move, /static/*. Template served from
+  templates/game.html. All references intact.
+
+● Bash(python -c "from pathlib import Path;
+      html=Path('src/templates/game.html').read_text();
+      css=Path('src/static/style.css').read_text();
+      js=Path('src/static/gui.js'…)
+  ⎿  HTML OK 4375 chars
+     CSS OK 11201 chars
+     GUI OK 7356 chars
+     PIECES OK 1801 chars
+
+● Redesign done. 4 files written:
+
+  - src/templates/game.html — semantic structure: masthead, turn banner with
+  kicker labels, paneled sidebars, board stage with figure caption, footer
+  - src/static/style.css — light editorial corporate theme; Fraunces display +
+  Hanken Grotesk body + JetBrains Mono tabular; paper bg w/ faint horizontal
+  rule grain; hairline rules; refined player palette (deep
+  navy/mustard/terracotta/forest)
+  - src/static/gui.js — added round counter, active-row highlight in standings
+  table, piece preview panel w/ orientation, color-aware swatches
+  - src/static/pieces.js — added PLAYER_HEX map + renderPieceGrid w/ size/color
+  opts; kept legacy renderPieceDiv
+
+  Server routes (/state, /move, /static) untouched. Cannot visually browser-test
+   from here — run python src/app.py --gui and open 127.0.0.1:8000.
+
+  Key design choices: Swiss/editorial corporate over generic SaaS. Numbered
+  panel headers (01 / Player Tray), kbd-styled hotkeys, pulse-dotted
+  live-session pill, tabular-num standings, dashed inner border on preview,
+  animated turn swatch transition.
+
+✻ Brewed for 2m 42s

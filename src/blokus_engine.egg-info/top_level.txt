@@ -1,0 +1,8 @@
+__init__
+adapters
+app
+bootstrap
+core
+static
+templates
+web_main
