@@ -44,7 +44,7 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
                 for pid, pieces in remaining.items()
             ],
             "scores": [{"player_id": s.player_id, "score": s.score, "is_winner": s.is_winner} for s in scores],
-            "game_status": session.detect_termination().name,
+            "game_status": str(session.detect_termination()),
             "consecutive_passes": session.consecutive_passes,
         }
 
