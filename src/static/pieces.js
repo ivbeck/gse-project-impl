@@ -1,26 +1,17 @@
-const PIECES = {
-    0: [[1]],
-    1: [[1,1]],
-    2: [[1,1,1]],
-    3: [[1],[1],[1]],
-    4: [[1,1,1,1]],
-    5: [[1,1],[1,0]],
-    6: [[1,1],[0,1]],
-    7: [[1,0],[1,1]],
-    8: [[0,1],[1,1]],
-    9: [[1,1,1],[0,1,0]],
-    10: [[1,1,1],[1,0,0]],
-    11: [[1,1,1],[0,0,1]],
-    12: [[1,0],[1,1],[0,1]],
-    13: [[0,1],[1,1],[1,0]],
-    14: [[1,1],[1,1]],
-    15: [[1,1,1,1,1]],
-    16: [[1,1],[1,0],[1,0]],
-    17: [[1,1],[0,1],[0,1]],
-    18: [[1,0],[1,1],[0,1]],
-    19: [[0,1],[1,1],[0,1]],
-    20: [[1],[1],[1],[1],[1]],
-};
+const PIECES = {};
+let pieceCatalogPromise = null;
+
+async function loadPieceCatalog() {
+    if (pieceCatalogPromise) return pieceCatalogPromise;
+    pieceCatalogPromise = fetch('/piece-catalog')
+        .then(resp => resp.json())
+        .then(data => {
+            data.pieces.forEach(piece => {
+                PIECES[piece.piece_id] = piece.shape;
+            });
+        });
+    return pieceCatalogPromise;
+}
 
 const PLAYER_COLORS = ['blue', 'yellow', 'red', 'green'];
 

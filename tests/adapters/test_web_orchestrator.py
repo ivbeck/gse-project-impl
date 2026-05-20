@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import Mock
 from adapters.web_orchestrator import create_web_orchestrator
 from bootstrap import create_game
+from core.piece_catalog import PieceCatalog
 from core.types import MoveResult, ConfigVO, Position
 
 
@@ -68,6 +69,22 @@ def test_web_orchestrator_state_returns_game_data():
     assert "consecutive_passes" in data
 
 
+def test_web_orchestrator_piece_catalog_exposes_core_shapes():
+    client = _real_client()
+
+    response = client.get("/piece-catalog")
+
+    assert response.status_code == 200
+    expected = [
+        {
+            "piece_id": piece.piece_id,
+            "shape": [list(row) for row in piece.shape],
+        }
+        for piece in PieceCatalog().get_all_pieces()
+    ]
+    assert response.json() == {"pieces": expected}
+
+
 def test_web_orchestrator_move_submits_to_session():
     mock_session = Mock()
     mock_session.submit_move.return_value = MoveResult.LEGAL
@@ -89,7 +106,7 @@ def test_web_orchestrator_move_submits_to_session():
 
     response = client.post("/move", json={
         "player_id": 0,
-        "piece_id": 0,
+        "piece_id": 7,
         "orientation_index": 0,
         "row": 0,
         "col": 0,
@@ -98,6 +115,7 @@ def test_web_orchestrator_move_submits_to_session():
     assert response.status_code == 200
     assert response.json()["ok"] == True
     mock_session.submit_move.assert_called_once()
+    assert mock_session.submit_move.call_args.args[0].piece_id == 7
     mock_session.advance_turn.assert_called_once()
     mock_presenter.render_board.assert_called()
 

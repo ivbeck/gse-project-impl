@@ -10,6 +10,7 @@ async function loadState() {
     try {
         const resp = await fetch('/state');
         const state = await resp.json();
+        await loadPieceCatalog();
         currentPlayerId = state.current_player_id;
         renderBoard(state.board);
         renderTray(state.players[state.current_player_id]);

@@ -48,6 +48,18 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
             "consecutive_passes": session.consecutive_passes,
         }
 
+    @app.get("/piece-catalog")
+    def piece_catalog():
+        return {
+            "pieces": [
+                {
+                    "piece_id": piece.piece_id,
+                    "shape": [list(row) for row in piece.shape],
+                }
+                for piece in session.catalog.get_all_pieces()
+            ]
+        }
+
     @app.get("/pieces/{player_id}")
     def pieces(player_id: int):
         return {"pieces": list(session.remaining_pieces[player_id])}
