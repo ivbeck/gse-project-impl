@@ -68,11 +68,13 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
         presenter.render_board(session.board.grid)
         if result == MoveResult.ILLEGAL:
             return {"ok": False, "error": "Illegal move"}
+        session.advance_turn()
         return {"ok": True}
 
     @app.post("/pass")
     def pass_turn():
         session.submit_pass()
+        session.advance_turn()
         presenter.render_board(session.board.grid)
         return {"ok": True}
 

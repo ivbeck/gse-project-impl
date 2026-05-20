@@ -1,8 +1,28 @@
-import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import Mock
 from adapters.web_orchestrator import create_web_orchestrator
-from core.types import Move, MoveResult
+from bootstrap import create_game
+from core.types import MoveResult, ConfigVO, Position
+
+
+def _config():
+    return ConfigVO(
+        board_width=20,
+        board_height=20,
+        player_count=4,
+        starting_positions={
+            0: Position(0, 0),
+            1: Position(0, 19),
+            2: Position(19, 19),
+            3: Position(19, 0),
+        }
+    )
+
+
+def _real_client():
+    session = create_game(_config())
+    app = create_web_orchestrator(session, None, Mock())
+    return TestClient(app)
 
 def test_web_orchestrator_health_check():
     app = create_web_orchestrator(None, None, None)
@@ -18,7 +38,7 @@ def test_web_orchestrator_index_returns_html():
     response = client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/html; charset=utf-8"
-    assert "<html>" in response.text
+    assert "<html" in response.text
 
 
 def test_web_orchestrator_state_returns_game_data():
@@ -78,6 +98,7 @@ def test_web_orchestrator_move_submits_to_session():
     assert response.status_code == 200
     assert response.json()["ok"] == True
     mock_session.submit_move.assert_called_once()
+    mock_session.advance_turn.assert_called_once()
     mock_presenter.render_board.assert_called()
 
 
@@ -111,6 +132,7 @@ def test_web_orchestrator_move_returns_error_on_illegal():
     assert response.status_code == 200
     assert response.json()["ok"] == False
     assert "error" in response.json()
+    mock_session.advance_turn.assert_not_called()
 
 
 def test_web_orchestrator_pass_submits_to_session():
@@ -137,3 +159,46 @@ def test_web_orchestrator_pass_submits_to_session():
     assert response.status_code == 200
     assert response.json()["ok"] == True
     mock_session.submit_pass.assert_called_once()
+    mock_session.advance_turn.assert_called_once()
+
+
+def test_web_orchestrator_legal_move_changes_current_player_id():
+    client = _real_client()
+
+    response = client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert client.get("/state").json()["current_player_id"] == 1
+
+
+def test_web_orchestrator_illegal_move_keeps_current_player_id():
+    client = _real_client()
+
+    response = client.post("/move", json={
+        "player_id": 1,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 19,
+    })
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is False
+    assert client.get("/state").json()["current_player_id"] == 0
+
+
+def test_web_orchestrator_pass_changes_current_player_id():
+    client = _real_client()
+
+    response = client.post("/pass")
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert client.get("/state").json()["current_player_id"] == 1

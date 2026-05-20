@@ -21,22 +21,28 @@ class WebPlayerAdapter(PlayerInput):
         self._event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._event_loop)
         self._move_future = self._event_loop.create_future()
+        event_loop = self._event_loop
+        move_future = self._move_future
 
         def run_loop():
-            self._event_loop.run_until_complete(self._move_future)
+            try:
+                event_loop.run_until_complete(move_future)
+            except asyncio.CancelledError:
+                pass
 
         self._thread = threading.Thread(target=run_loop)
         self._thread.start()
         self._thread.join(timeout=5)
 
         if self._thread.is_alive():
-            if self._event_loop and self._move_future:
-                self._event_loop.call_soon_threadsafe(self._move_future.cancel)
+            event_loop.call_soon_threadsafe(move_future.cancel)
+            self._thread.join()
+            event_loop.close()
             self._event_loop = None
             return None
         else:
-            result = self._move_future.result() if self._move_future else None
-            self._event_loop.close()
+            result = move_future.result()
+            event_loop.close()
             self._event_loop = None
             return result
 
