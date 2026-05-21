@@ -89,3 +89,13 @@ def test_game_session_restore_uses_memento_config(session):
     assert restored.board.config == memento.config
     assert restored.board.get_owner(0, 0) == 0
     assert restored.remaining_pieces == session.remaining_pieces
+
+
+def test_last_placed_piece_starts_none(session):
+    assert session.last_placed_piece == {0: None, 1: None, 2: None, 3: None}
+
+
+def test_last_placed_piece_records_successful_move(session):
+    session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0))
+    assert session.last_placed_piece[0] == 0
+    assert session.last_placed_piece[1] is None

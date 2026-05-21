@@ -29,6 +29,7 @@ class GameSession:
             i: list(piece_ids) for i in range(config.player_count)
         }
         self._is_first_move: dict[int, bool] = {i: True for i in range(config.player_count)}
+        self.last_placed_piece: dict[int, int | None] = {i: None for i in range(config.player_count)}
 
     @classmethod
     def from_memento(cls, memento: "Memento", catalog: PieceCatalog, scoring: Scoring) -> "GameSession":
@@ -72,6 +73,7 @@ class GameSession:
             self.board.apply_move(move, orientation)
             self.remaining_pieces[move.player_id].remove(move.piece_id)
             self._is_first_move[move.player_id] = False
+            self.last_placed_piece[move.player_id] = move.piece_id
             self.consecutive_passes = 0
         return result
 
@@ -89,4 +91,4 @@ class GameSession:
         return GameStatus.IN_PROGRESS
 
     def final_scores(self) -> list[PlayerScore]:
-        return self.scoring.rank(self.remaining_pieces)
+        return self.scoring.rank(self.remaining_pieces, self.last_placed_piece)
