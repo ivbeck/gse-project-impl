@@ -7,10 +7,13 @@ import uvicorn
 
 def run_web():
     config = JsonConfigSource().load_config()
-    session = create_game(config)
+    def create_session():
+        return create_game(config)
+
+    session = create_session()
     player = WebPlayerAdapter()
     presenter = WebPresentationAdapter(session)
-    app = create_web_orchestrator(session, player, presenter)
+    app = create_web_orchestrator(session, player, presenter, session_factory=create_session)
     uvicorn.run(app, host="127.0.0.1", port=8000)
 
 if __name__ == "__main__":

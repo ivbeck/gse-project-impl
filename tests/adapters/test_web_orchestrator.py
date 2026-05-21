@@ -22,16 +22,33 @@ def _config():
     )
 
 
-def _real_client(ai_player=None, legal_move_enumerator=None):
-    session = create_game(_config())
+def _tracked_session_client(ai_player=None, legal_move_enumerator=None):
+    sessions = []
+
+    def create_session():
+        session = create_game(_config())
+        sessions.append(session)
+        return session
+
+    session = create_session()
     app = create_web_orchestrator(
         session,
         None,
         Mock(),
         ai_player=ai_player,
         legal_move_enumerator=legal_move_enumerator,
+        session_factory=create_session,
     )
-    return TestClient(app)
+    return sessions, TestClient(app)
+
+
+def _real_session_client(ai_player=None, legal_move_enumerator=None):
+    sessions, client = _tracked_session_client(ai_player, legal_move_enumerator)
+    return sessions[0], client
+
+
+def _real_client(ai_player=None, legal_move_enumerator=None):
+    return _real_session_client(ai_player, legal_move_enumerator)[1]
 
 
 class _FirstLegalMoveAi:
@@ -192,7 +209,156 @@ def test_web_orchestrator_state_returns_game_data():
     assert "game_status" in data
     assert "consecutive_passes" in data
     assert "started" in data
+    assert "winner_ids" in data
+    assert "last_event" in data
+    assert "skipped_players" in data
+    assert "current_player_has_legal_moves" in data
     assert all("controller_type" in player for player in data["players"])
+
+
+def test_web_orchestrator_state_returns_finished_scores_and_winners():
+    session, client = _real_session_client()
+    for _ in range(session.config.player_count):
+        session.submit_pass()
+        session.advance_turn()
+
+    state = client.get("/state").json()
+
+    assert state["game_status"] == "FINISHED"
+    assert len(state["scores"]) == session.config.player_count
+    assert state["winner_ids"] == [0, 1, 2, 3]
+    assert all("score" in score for score in state["scores"])
+
+
+def test_web_orchestrator_finished_game_rejects_moves_and_passes():
+    session, client = _real_session_client()
+    session.consecutive_passes = session.config.player_count
+
+    move_response = client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+    pass_response = client.post("/pass")
+
+    assert move_response.status_code == 200
+    assert move_response.json()["ok"] is False
+    assert move_response.json()["game_status"] == "FINISHED"
+    assert session.board.get_owner(0, 0) is None
+    assert pass_response.status_code == 200
+    assert pass_response.json()["ok"] is False
+    assert pass_response.json()["game_status"] == "FINISHED"
+    assert session.current_player_id == 0
+
+
+def test_web_orchestrator_start_after_finished_game_creates_fresh_session():
+    sessions, client = _tracked_session_client()
+    client.post("/start", json={"human_players": 4})
+    client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+    sessions[-1].consecutive_passes = sessions[-1].config.player_count
+
+    response = client.post("/start", json={"human_players": 2})
+    state = client.get("/state").json()
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert len(sessions) == 2
+    assert state["started"] is True
+    assert state["human_players"] == 2
+    assert state["game_status"] == "IN_PROGRESS"
+    assert state["current_player_id"] == 0
+    assert all(cell is None for row in state["board"] for cell in row)
+    assert [len(player["remaining_pieces"]) for player in state["players"]] == [21, 21, 21, 21]
+    assert [player["controller_type"] for player in state["players"]] == ["human", "human", "ai", "ai"]
+
+
+def test_web_orchestrator_reset_returns_to_unstarted_fresh_menu_state():
+    sessions, client = _tracked_session_client()
+    client.post("/start", json={"human_players": 4})
+    client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+
+    response = client.post("/reset")
+    state = client.get("/state").json()
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "started": False}
+    assert len(sessions) == 2
+    assert state["started"] is False
+    assert state["human_players"] is None
+    assert state["game_status"] == "IN_PROGRESS"
+    assert state["last_event"] is None
+    assert state["skipped_players"] == []
+    assert all(cell is None for row in state["board"] for cell in row)
+    assert [len(player["remaining_pieces"]) for player in state["players"]] == [21, 21, 21, 21]
+
+
+def test_web_orchestrator_skips_current_human_with_no_legal_moves():
+    enumerator = _ScriptedEnumerator({
+        1: Move(player_id=1, piece_id=0, orientation_index=0, row=0, col=19),
+    })
+    client = _real_client(legal_move_enumerator=enumerator)
+
+    client.post("/start", json={"human_players": 4})
+    state = client.get("/state").json()
+
+    assert state["current_player_id"] == 1
+    assert state["consecutive_passes"] == 1
+    assert state["current_player_has_legal_moves"] is True
+    assert [player["player_id"] for player in state["skipped_players"]] == [0]
+    assert state["skipped_players"][0]["message"] == "Blue has no legal moves and was skipped."
+
+
+def test_web_orchestrator_repeated_no_move_players_are_skipped_safely():
+    enumerator = _ScriptedEnumerator({
+        2: Move(player_id=2, piece_id=0, orientation_index=0, row=19, col=19),
+    })
+    client = _real_client(legal_move_enumerator=enumerator)
+
+    client.post("/start", json={"human_players": 4})
+    state = client.get("/state").json()
+
+    assert state["current_player_id"] == 2
+    assert state["consecutive_passes"] == 2
+    assert [player["player_id"] for player in state["skipped_players"]] == [0, 1]
+
+
+def test_web_orchestrator_all_players_with_no_legal_moves_finish_game():
+    client = _real_client(legal_move_enumerator=_NoLegalMovesEnumerator())
+
+    client.post("/start", json={"human_players": 4})
+    state = client.get("/state").json()
+
+    assert state["game_status"] == "FINISHED"
+    assert state["consecutive_passes"] == 4
+    assert [player["player_id"] for player in state["skipped_players"]] == [0, 1, 2, 3]
+
+
+def test_web_orchestrator_player_with_legal_moves_is_not_skipped():
+    enumerator = _ScriptedEnumerator({
+        0: Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0),
+    })
+    client = _real_client(legal_move_enumerator=enumerator)
+
+    client.post("/start", json={"human_players": 4})
+    state = client.get("/state").json()
+
+    assert state["current_player_id"] == 0
+    assert state["consecutive_passes"] == 0
+    assert state["skipped_players"] == []
 
 
 def test_web_orchestrator_piece_catalog_exposes_core_shapes():
@@ -349,7 +515,7 @@ def test_web_orchestrator_move_submits_to_session():
     })
 
     assert response.status_code == 200
-    assert response.json()["ok"] == True
+    assert response.json()["ok"] is True
     mock_session.submit_move.assert_called_once()
     assert mock_session.submit_move.call_args.args[0].piece_id == 7
     mock_session.advance_turn.assert_called_once()
@@ -384,7 +550,7 @@ def test_web_orchestrator_move_returns_error_on_illegal():
     })
 
     assert response.status_code == 200
-    assert response.json()["ok"] == False
+    assert response.json()["ok"] is False
     assert "error" in response.json()
     mock_session.advance_turn.assert_not_called()
 
@@ -411,7 +577,7 @@ def test_web_orchestrator_pass_submits_to_session():
     response = client.post("/pass")
 
     assert response.status_code == 200
-    assert response.json()["ok"] == True
+    assert response.json()["ok"] is True
     mock_session.submit_pass.assert_called_once()
     mock_session.advance_turn.assert_called_once()
 
@@ -450,6 +616,7 @@ def test_web_orchestrator_illegal_move_keeps_current_player_id():
 
 def test_web_orchestrator_auto_resolves_ai_players_after_human_move():
     enumerator = _ScriptedEnumerator({
+        0: Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0),
         1: Move(player_id=1, piece_id=0, orientation_index=0, row=0, col=19),
         2: Move(player_id=2, piece_id=0, orientation_index=0, row=19, col=19),
         3: Move(player_id=3, piece_id=0, orientation_index=0, row=19, col=0),
@@ -478,11 +645,14 @@ def test_web_orchestrator_auto_resolves_ai_players_after_human_move():
     state = client.get("/state").json()
     assert state["current_player_id"] == 0
     assert [len(player["remaining_pieces"]) for player in state["players"]] == [20, 20, 20, 20]
-    assert enumerator.calls == [1, 2, 3]
+    assert enumerator.calls[:2] == [0, 0]
+    assert enumerator.calls[2:5] == [1, 2, 3]
 
 
 def test_web_orchestrator_human_move_then_ai_turns_end_on_next_human():
     enumerator = _ScriptedEnumerator({
+        0: Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0),
+        1: Move(player_id=1, piece_id=0, orientation_index=0, row=0, col=19),
         2: Move(player_id=2, piece_id=0, orientation_index=0, row=19, col=19),
         3: Move(player_id=3, piece_id=0, orientation_index=0, row=19, col=0),
     })
@@ -516,7 +686,9 @@ def test_web_orchestrator_human_move_then_ai_turns_end_on_next_human():
 
 
 def test_web_orchestrator_ai_passes_when_no_legal_move_exists():
-    enumerator = _NoLegalMovesEnumerator()
+    enumerator = _ScriptedEnumerator({
+        0: Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0),
+    })
     client = _real_client(legal_move_enumerator=enumerator)
     client.post("/start", json={"human_players": 1})
 
@@ -538,7 +710,8 @@ def test_web_orchestrator_ai_passes_when_no_legal_move_exists():
     state = client.get("/state").json()
     assert state["current_player_id"] == 0
     assert state["consecutive_passes"] == 3
-    assert enumerator.calls == [1, 2, 3]
+    assert [player["player_id"] for player in state["skipped_players"]] == [1, 2, 3]
+    assert enumerator.calls[2:5] == [1, 2, 3]
 
 
 def test_web_orchestrator_pass_changes_current_player_id():

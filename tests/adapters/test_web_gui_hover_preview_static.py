@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 GUI_JS = ROOT / "src" / "static" / "gui.js"
 STYLE_CSS = ROOT / "src" / "static" / "style.css"
+GAME_HTML = ROOT / "src" / "templates" / "game.html"
 
 
 def _read(path: Path) -> str:
@@ -69,3 +70,32 @@ def test_hover_anchor_is_kept_even_before_piece_selection():
     anchor_assignment = gui.index("hoverAnchor = { row: anchorRow, col: anchorCol }", render_start)
     selection_guard = gui.index("if (selectedPiece === null || selectedPiece === undefined) return", render_start)
     assert anchor_assignment < selection_guard
+
+
+def test_endgame_panel_is_rendered_from_finished_state():
+    gui = _read(GUI_JS)
+    css = _read(STYLE_CSS)
+    html = _read(GAME_HTML)
+
+    assert 'id="endgame-panel"' in html
+    assert "function renderEndGamePanel(state)" in gui
+    assert "state.game_status !== 'FINISHED'" in gui
+    assert "main-menu-button" in gui
+    assert "function returnToMainMenu()" in gui
+    assert "fetch('/reset'" in gui
+    assert "state.winner_ids" in gui
+    assert ".endgame-panel" in css
+    assert ".endgame-menu-button" in css
+    assert "#board.is-locked" in css
+
+
+def test_skipped_player_banner_is_rendered_from_state():
+    gui = _read(GUI_JS)
+    css = _read(STYLE_CSS)
+    html = _read(GAME_HTML)
+
+    assert 'id="event-banner"' in html
+    assert "function skippedPlayerMessage(skippedPlayers)" in gui
+    assert "has no legal moves and was skipped" in gui
+    assert "state.skipped_players" in gui
+    assert ".event-banner" in css

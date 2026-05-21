@@ -6,7 +6,9 @@ let roundCounter = 1;
 let currentBoard = [];
 let hoverAnchor = null;
 let gameStarted = false;
+let gameFinished = false;
 let currentControllerType = 'human';
+let currentPlayerHasLegalMoves = null;
 
 const HOVER_PREVIEW_CLASSES = [
     'hover-preview-valid',
@@ -21,9 +23,13 @@ async function loadState() {
         const resp = await fetch('/state');
         const state = await resp.json();
         gameStarted = Boolean(state.started);
+        gameFinished = state.game_status === 'FINISHED';
+        currentPlayerHasLegalMoves = state.current_player_has_legal_moves;
         updateSessionVisibility(state);
         if (!gameStarted) {
             currentControllerType = 'human';
+            renderEventBanner(state);
+            renderEndGamePanel(state);
             updatePassButton(state);
             return;
         }
@@ -35,6 +41,8 @@ async function loadState() {
         renderTray(currentPlayer);
         renderDashboard(state);
         updateTurnBanner(state);
+        renderEventBanner(state);
+        renderEndGamePanel(state);
         updatePassButton(state);
     } catch (e) {
         console.error('Failed to load state:', e);
@@ -50,16 +58,53 @@ function controllerLabel(controllerType) {
 }
 
 function currentPlayerCanAct(state) {
-    return gameStarted && currentControllerType === 'human' && (!state || state.game_status !== 'FINISHED');
+    const finished = state ? state.game_status === 'FINISHED' : gameFinished;
+    const hasLegalMoves = state && Object.prototype.hasOwnProperty.call(state, 'current_player_has_legal_moves')
+        ? state.current_player_has_legal_moves !== false
+        : currentPlayerHasLegalMoves !== false;
+    return gameStarted && !finished && hasLegalMoves && currentControllerType === 'human';
+}
+
+function setSessionStatus(label, finished) {
+    const statusLabel = document.querySelector('.status-label');
+    if (statusLabel) statusLabel.textContent = label;
+    const statusPill = document.querySelector('.status-pill');
+    if (statusPill) statusPill.classList.toggle('finished', finished);
+}
+
+function showStartScreen() {
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    if (startScreen) startScreen.classList.remove('hidden');
+    if (gameScreen) gameScreen.classList.add('hidden');
+    setSessionStatus('Setup', false);
+}
+
+function showGameScreen() {
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    if (startScreen) startScreen.classList.add('hidden');
+    if (gameScreen) gameScreen.classList.remove('hidden');
+    setSessionStatus('Live Session', false);
+}
+
+function showEndGameScreen(state) {
+    showGameScreen();
+    gameFinished = true;
+    setSessionStatus('Finished', true);
+    renderEndGamePanel(state);
 }
 
 function updateSessionVisibility(state) {
-    const startScreen = document.getElementById('start-screen');
-    const gameScreen = document.getElementById('game-screen');
-    if (startScreen) startScreen.classList.toggle('hidden', Boolean(state.started));
-    if (gameScreen) gameScreen.classList.toggle('hidden', !state.started);
-    const statusLabel = document.querySelector('.status-label');
-    if (statusLabel) statusLabel.textContent = state.started ? 'Live Session' : 'Setup';
+    if (!state.started) {
+        showStartScreen();
+        return;
+    }
+    if (state.game_status === 'FINISHED') {
+        showEndGameScreen(state);
+        return;
+    }
+    showGameScreen();
 }
 
 function updatePassButton(state) {
@@ -75,6 +120,12 @@ function updateTurnBanner(state) {
     document.getElementById('current-player').textContent = label;
     const controller = document.getElementById('current-controller');
     if (controller) controller.textContent = controllerLabel(player.controller_type || 'human');
+    const suffix = document.querySelector('.turn-suffix');
+    if (suffix) suffix.textContent = state.game_status === 'FINISHED' ? 'game finished' : 'to move';
+    const hints = document.querySelector('.turn-hints');
+    if (hints) hints.innerHTML = state.game_status === 'FINISHED'
+        ? 'Final scores are locked'
+        : '<kbd>R</kbd> rotate &middot; <kbd>F</kbd> flip &middot; click cell to place';
     const swatch = document.getElementById('turn-swatch');
     if (swatch) swatch.style.background = PLAYER_HEX[colorKey] || '#14151a';
     /* Round counter: estimate from total placed pieces */
@@ -91,9 +142,14 @@ function renderBoard(board) {
     container.innerHTML = '';
     const cols = board[0].length;
     container.style.gridTemplateColumns = `repeat(${cols}, 26px)`;
+    container.classList.toggle('is-locked', gameFinished);
     container.onmouseover = renderHoverPreviewFromEvent;
     container.onmousemove = renderHoverPreviewFromEvent;
     container.onmouseleave = clearHoverPreview;
+    if (gameFinished) {
+        container.onmouseover = null;
+        container.onmousemove = null;
+    }
     board.forEach((row, ri) => {
         row.forEach((cell, ci) => {
             const div = document.createElement('div');
@@ -118,6 +174,113 @@ function renderBoard(board) {
     if (hoverAnchor && selectedPiece !== null && selectedPiece !== undefined) {
         renderHoverPreview(hoverAnchor.row, hoverAnchor.col);
     }
+}
+
+function skippedPlayerMessage(skippedPlayers) {
+    if (!skippedPlayers || skippedPlayers.length === 0) return '';
+    if (skippedPlayers.length === 1) {
+        return skippedPlayers[0].message || `${skippedPlayers[0].color} has no legal moves and was skipped.`;
+    }
+    const names = skippedPlayers.map(player => player.color || `Player ${player.player_id}`);
+    return `${names.join(', ')} have no legal moves and were skipped.`;
+}
+
+function renderEventBanner(state) {
+    const banner = document.getElementById('event-banner');
+    if (!banner) return;
+    const message = skippedPlayerMessage(state.skipped_players);
+    banner.textContent = message;
+    banner.classList.toggle('hidden', !message);
+}
+
+function renderEndGamePanel(state) {
+    const panel = document.getElementById('endgame-panel');
+    if (!panel) return;
+    if (state.game_status !== 'FINISHED') {
+        panel.classList.add('hidden');
+        panel.innerHTML = '';
+        return;
+    }
+
+    const scores = (state.scores || []).slice().sort((a, b) => {
+        if (a.score !== b.score) return a.score - b.score;
+        return a.player_id - b.player_id;
+    });
+    const winnerIds = state.winner_ids || scores.filter(score => score.is_winner).map(score => score.player_id);
+    const winnerNames = winnerIds.map(playerId => {
+        const player = playerForId(state, playerId);
+        return player ? player.color : `Player ${playerId}`;
+    });
+    const winnerText = winnerNames.length > 1
+        ? `${winnerNames.join(', ')} share the win`
+        : (winnerNames[0] ? `${winnerNames[0]} wins` : 'No winner recorded');
+
+    let html = '<div class="endgame-kicker">Game Complete</div>';
+    html += `<h2>${winnerText}</h2>`;
+    html += '<p>Final score uses remaining unplaced squares. Lower is better.</p>';
+    html += '<table><thead><tr><th>Rank</th><th>Player</th><th class="right">Score</th><th>Result</th></tr></thead><tbody>';
+    scores.forEach((score, index) => {
+        const player = playerForId(state, score.player_id);
+        const colorKey = ((player && player.color) || score.color || PLAYER_COLORS[score.player_id]).toLowerCase();
+        const colorHex = PLAYER_HEX[colorKey] || '#14151a';
+        const playerLabel = (player && player.color) || score.color || `Player ${score.player_id}`;
+        const result = score.is_winner ? '<span class="winner-badge">Winner</span>' : '';
+        html += '<tr>';
+        html += `<td>${String(index + 1).padStart(2, '0')}</td>`;
+        html += `<td><span class="player-swatch" style="background:${colorHex}"></span>${playerLabel}</td>`;
+        html += `<td class="right">${score.score}</td>`;
+        html += `<td>${result}</td>`;
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div class="endgame-actions"><button class="endgame-menu-button" id="main-menu-button" type="button">Main Menu</button></div>';
+
+    panel.innerHTML = html;
+    const menuButton = document.getElementById('main-menu-button');
+    if (menuButton) menuButton.addEventListener('click', returnToMainMenu);
+    panel.classList.remove('hidden');
+}
+
+function clearTransientPanels() {
+    const eventBanner = document.getElementById('event-banner');
+    if (eventBanner) {
+        eventBanner.textContent = '';
+        eventBanner.classList.add('hidden');
+    }
+    const endGamePanel = document.getElementById('endgame-panel');
+    if (endGamePanel) {
+        endGamePanel.innerHTML = '';
+        endGamePanel.classList.add('hidden');
+    }
+}
+
+function clearFrontendGameState() {
+    selectedPiece = null;
+    currentOrientation = 0;
+    currentPlayerId = 0;
+    roundCounter = 1;
+    currentBoard = [];
+    hoverAnchor = null;
+    gameStarted = false;
+    gameFinished = false;
+    currentControllerType = 'human';
+    currentPlayerHasLegalMoves = null;
+    setStartError('');
+    clearHoverPreview();
+    clearTransientPanels();
+    renderPreview(null);
+    const tray = document.getElementById('player-tray');
+    if (tray) tray.innerHTML = '';
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard) dashboard.innerHTML = '';
+    const board = document.getElementById('board');
+    if (board) {
+        board.innerHTML = '';
+        board.classList.remove('is-locked');
+    }
+    const counter = document.getElementById('round-counter');
+    if (counter) counter.textContent = '01';
+    updatePassButton({ started: false, game_status: 'IN_PROGRESS' });
 }
 
 function clearHoverPreviewClasses() {
@@ -352,6 +515,23 @@ async function submitPass() {
         }
     } catch (e) {
         console.error('Failed to pass turn:', e);
+    }
+}
+
+async function returnToMainMenu() {
+    try {
+        const resp = await fetch('/reset', { method: 'POST' });
+        const result = await resp.json();
+        if (!resp.ok || !result.ok) {
+            throw new Error(result.error || 'Unable to reset session');
+        }
+        clearFrontendGameState();
+        showStartScreen();
+    } catch (e) {
+        console.error('Failed to return to menu:', e);
+        setStartError('Unable to return to menu');
+        clearFrontendGameState();
+        showStartScreen();
     }
 }
 
