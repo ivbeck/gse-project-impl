@@ -2,6 +2,20 @@ import json
 from core.types import ConfigBuilder, ConfigVO, Position
 
 
+DUO_CONFIG_JSON = """
+{
+  "board_width": 14,
+  "board_height": 14,
+  "player_count": 2,
+  "starting_positions": {
+    "0": {"row": 4, "col": 4},
+    "1": {"row": 9, "col": 9}
+  },
+  "scoring_rule": "duo"
+}
+"""
+
+
 class JsonConfigSource:
     def __init__(self, config_json: str = "{}"):
         self.config_json = config_json
@@ -17,6 +31,7 @@ class JsonConfigSource:
             "2": {"row": bh - 1, "col": bw - 1},
             "3": {"row": bh - 1, "col": 0},
         })
+        scoring_rule = data.get("scoring_rule", "classic")
         return (
             ConfigBuilder()
             .with_board_dimensions(bw, bh)
@@ -24,5 +39,6 @@ class JsonConfigSource:
             .with_starting_positions({
                 int(k): Position(v["row"], v["col"]) for k, v in sp.items()
             })
+            .with_scoring_rule(scoring_rule)
             .build()
         )
