@@ -2,10 +2,10 @@
 from core.types import ConfigVO, MoveResult, GameStatus
 from core.piece_catalog import PieceCatalog
 from core.rule_set import RuleSet
-from core.scoring import Scoring
+from core.scoring import build_scoring
 from core.game_session import GameSession
 from core.legal_move_enumerator import LegalMoveEnumerator
-from adapters.json_config_source import JsonConfigSource
+from adapters.json_config_source import JsonConfigSource, DUO_CONFIG_JSON
 from adapters.human_player import HumanPlayer
 from adapters.cli import CLI
 
@@ -13,7 +13,7 @@ from adapters.cli import CLI
 def create_game(config: ConfigVO) -> GameSession:
     catalog = PieceCatalog()
     ruleset = RuleSet(catalog, config)
-    scoring = Scoring(catalog)
+    scoring = build_scoring(config, catalog)
     return GameSession(config, catalog, ruleset, scoring)
 
 
@@ -43,8 +43,9 @@ def run_loop(session: GameSession, player_input, cli: CLI):
     return cli.prompt_replay()
 
 
-def main():
-    config_source = JsonConfigSource()
+def main(mode: str = "classic"):
+    config_json = DUO_CONFIG_JSON if mode == "duo" else "{}"
+    config_source = JsonConfigSource(config_json)
     config = config_source.load_config()
     session = create_game(config)
     player = HumanPlayer()
