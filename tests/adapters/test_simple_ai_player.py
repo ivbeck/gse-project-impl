@@ -6,7 +6,6 @@ from core.board import Board
 from core.game_session import GameSession
 from core.legal_move_enumerator import LegalMoveEnumerator
 from core.piece_catalog import PieceCatalog
-from core.scoring import Scoring
 from adapters.json_state_repo import JsonStateRepo
 
 
