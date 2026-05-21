@@ -84,7 +84,7 @@ def test_game_session_restore_uses_memento_config(session):
     session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0))
     memento = Memento.from_session(session)
     catalog = PieceCatalog()
-    restored = GameSession.from_memento(memento, catalog, Scoring(catalog))
+    restored = GameSession.from_memento(memento, catalog)
     assert restored.config == memento.config
     assert restored.board.config == memento.config
     assert restored.board.get_owner(0, 0) == 0
@@ -99,3 +99,20 @@ def test_last_placed_piece_records_successful_move(session):
     session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0))
     assert session.last_placed_piece[0] == 0
     assert session.last_placed_piece[1] is None
+
+
+def test_from_memento_restores_scoring_and_last_placed(session):
+    from core.memento import Memento
+    from core.scoring import DuoScoring
+    from core.types import ConfigBuilder, Position
+    duo_config = (ConfigBuilder().with_board_dimensions(14, 14).with_player_count(2)
+                  .with_starting_positions({0: Position(4, 4), 1: Position(9, 9)})
+                  .with_scoring_rule("duo").build())
+    catalog = PieceCatalog()
+    ruleset = RuleSet(catalog, duo_config)
+    duo_session = GameSession(duo_config, catalog, ruleset, Scoring(catalog))
+    duo_session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=4, col=4))
+    memento = Memento.from_session(duo_session)
+    restored = GameSession.from_memento(memento, catalog)
+    assert isinstance(restored.scoring, DuoScoring)
+    assert restored.last_placed_piece == {0: 0, 1: None}
