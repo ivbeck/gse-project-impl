@@ -46,6 +46,11 @@ def create_web_orchestrator(session, player_adapter, presenter) -> FastAPI:
             "scores": [{"player_id": s.player_id, "score": s.score, "is_winner": s.is_winner} for s in scores],
             "game_status": str(session.detect_termination()),
             "consecutive_passes": session.consecutive_passes,
+            "starting_positions": {
+                str(pid): {"row": pos.row, "col": pos.col}
+                for pid, pos in session.config.starting_positions.items()
+            },
+            "scoring_rule": session.config.scoring_rule,
         }
 
     @app.get("/piece-catalog")

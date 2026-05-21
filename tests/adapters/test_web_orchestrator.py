@@ -102,6 +102,7 @@ def test_web_orchestrator_state_returns_game_data():
     ]
     mock_session.detect_termination.return_value = type('GameStatus', (), {'name': 'IN_PROGRESS'})()
     mock_session.consecutive_passes = 0
+    mock_session.config = _config()
 
     app = create_web_orchestrator(mock_session, None, None)
     client = TestClient(app)
@@ -114,6 +115,8 @@ def test_web_orchestrator_state_returns_game_data():
     assert "scores" in data
     assert "game_status" in data
     assert "consecutive_passes" in data
+    assert "starting_positions" in data
+    assert "scoring_rule" in data
 
 
 def test_web_orchestrator_piece_catalog_exposes_core_shapes():
@@ -377,3 +380,14 @@ def test_web_orchestrator_pass_changes_current_player_id():
     assert response.status_code == 200
     assert response.json()["ok"] is True
     assert client.get("/state").json()["current_player_id"] == 1
+
+
+def test_state_exposes_duo_starting_positions_and_rule():
+    from adapters.json_config_source import JsonConfigSource, DUO_CONFIG_JSON
+    session = create_game(JsonConfigSource(DUO_CONFIG_JSON).load_config())
+    app = create_web_orchestrator(session, None, Mock())
+    client = TestClient(app)
+    data = client.get("/state").json()
+    assert data["scoring_rule"] == "duo"
+    assert data["starting_positions"] == {"0": {"row": 4, "col": 4}, "1": {"row": 9, "col": 9}}
+    assert len(data["players"]) == 2
