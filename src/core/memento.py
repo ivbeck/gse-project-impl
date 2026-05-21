@@ -11,6 +11,7 @@ class Memento:
     remaining_pieces: tuple[tuple[int, tuple[int, ...]], ...]
     consecutive_passes: int
     is_first_move: tuple[tuple[int, bool], ...]
+    last_placed_piece: tuple[tuple[int, int | None], ...] = ()
 
     @classmethod
     def from_session(cls, session: GameSession) -> "Memento":
@@ -26,6 +27,10 @@ class Memento:
             (player_id, flag)
             for player_id, flag in sorted(session._is_first_move.items())
         )
+        last_placed_piece = tuple(
+            (player_id, piece_id)
+            for player_id, piece_id in sorted(session.last_placed_piece.items())
+        )
         return cls(
             config=session.config,
             board_state=board_state,
@@ -33,4 +38,5 @@ class Memento:
             remaining_pieces=remaining_pieces,
             consecutive_passes=session.consecutive_passes,
             is_first_move=is_first_move,
+            last_placed_piece=last_placed_piece,
         )
