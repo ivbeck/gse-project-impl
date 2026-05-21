@@ -68,6 +68,21 @@ def test_duo_remaining_squares_are_negative_and_highest_wins(catalog):
     assert scores[0].player_id == 1  # sorted highest-first
 
 
+def test_duo_tie_yields_co_winners(catalog):
+    duo = DuoScoring(catalog)
+    scores = duo.rank({0: [], 1: []}, last_placed_piece={0: 0, 1: 0})
+    assert all(s.score == 20 for s in scores)
+    assert all(s.is_winner for s in scores)
+
+
+def test_duo_no_bonus_if_remaining_despite_monomino_last(catalog):
+    duo = DuoScoring(catalog)
+    # 1 square remaining; monomino-last must NOT grant the +5 (or +15) bonus.
+    scores = duo.rank({0: [0], 1: []}, last_placed_piece={0: 0, 1: None})
+    p0 = next(s for s in scores if s.player_id == 0)
+    assert p0.score == -1
+
+
 def test_build_scoring_selects_strategy_by_config(catalog):
     classic = ConfigVO(board_width=20, board_height=20, player_count=4,
                        starting_positions={0: Position(0, 0)}, scoring_rule="classic")
