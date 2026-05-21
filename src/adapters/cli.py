@@ -6,15 +6,16 @@ COLORS = {0: "B", 1: "Y", 2: "R", 3: "G"}
 
 class CLI(PresentationOutput):
     def render_board(self, board) -> None:
-        print("  ", end="")
-        for c in range(len(board[0])):
-            print(f"{c:2}", end="")
-        print()
+        column_count = len(board[0]) if board else 0
+        row_label_width = max(2, len(str(max(len(board) - 1, 0))))
+        cell_width = max(3, len(str(max(column_count - 1, 0))))
+
+        header = " " * (row_label_width + 1)
+        header += "".join(f"{c:^{cell_width}}" for c in range(column_count))
+        print(header)
         for r, row in enumerate(board):
-            print(f"{r:2} ", end="")
-            for cell in row:
-                print(f" {COLORS.get(cell, '.')} ", end="")
-            print()
+            cells = "".join(f"{COLORS.get(cell, '.'):^{cell_width}}" for cell in row)
+            print(f"{r:>{row_label_width}} {cells}")
 
     def render_status(self, status: GameStatus) -> None:
         print(f"Game status: {status}")
@@ -22,3 +23,17 @@ class CLI(PresentationOutput):
     def prompt_replay(self) -> bool:
         response = input("Play again? (y/n): ")
         return response.lower() == 'y'
+
+    def prompt_human_player_count(self, max_players: int) -> int:
+        if max_players < 1:
+            raise ValueError("max_players must be positive")
+        while True:
+            response = input(f"How many human players? (1-{max_players}): ")
+            try:
+                human_players = int(response)
+            except ValueError:
+                print("Please enter a number.")
+                continue
+            if 1 <= human_players <= max_players:
+                return human_players
+            print(f"Please enter a value between 1 and {max_players}.")
