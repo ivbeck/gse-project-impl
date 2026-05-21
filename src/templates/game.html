@@ -34,58 +34,95 @@
 
         <div class="rule rule-thick"></div>
 
-        <section class="turn-banner">
-            <div class="turn-kicker">Active Turn</div>
-            <div class="turn-headline">
-                <span class="turn-swatch" id="turn-swatch"></span>
-                <span class="turn-name" id="current-player">Blue</span>
-                <span class="turn-suffix">to move</span>
+        <section class="start-screen" id="start-screen">
+            <div class="start-copy">
+                <div class="turn-kicker">Session Setup</div>
+                <h1 class="start-title">Choose human seats</h1>
+                <p class="start-text">The table always keeps four clockwise players. Seats after the selected human count are controlled by Simple AI.</p>
             </div>
-            <div class="turn-hints">
-                <kbd>R</kbd> rotate &middot; <kbd>F</kbd> flip &middot; click cell to place
+            <div class="start-options" aria-label="Human player count">
+                <button class="start-option" type="button" data-human-players="1">
+                    <span class="option-count">01</span>
+                    <span class="option-title">One human</span>
+                    <span class="option-detail">Blue human; Yellow, Red, Green AI</span>
+                </button>
+                <button class="start-option" type="button" data-human-players="2">
+                    <span class="option-count">02</span>
+                    <span class="option-title">Two humans</span>
+                    <span class="option-detail">Blue and Yellow human; Red and Green AI</span>
+                </button>
+                <button class="start-option" type="button" data-human-players="3">
+                    <span class="option-count">03</span>
+                    <span class="option-title">Three humans</span>
+                    <span class="option-detail">Blue, Yellow, Red human; Green AI</span>
+                </button>
+                <button class="start-option" type="button" data-human-players="4">
+                    <span class="option-count">04</span>
+                    <span class="option-title">Four humans</span>
+                    <span class="option-detail">All seats use web controls</span>
+                </button>
             </div>
+            <div class="start-error" id="start-error" role="alert"></div>
         </section>
 
-        <div class="rule"></div>
-
-        <main class="game-container">
-            <aside class="sidebar left">
-                <section class="panel">
-                    <h2 class="panel-title"><span class="panel-num">01</span> Player Tray</h2>
-                    <p class="panel-sub">Remaining inventory</p>
-                    <div id="player-tray"></div>
-                </section>
-            </aside>
-
-            <section class="board-stage">
-                <div class="board-frame">
-                    <div class="board-coords-x" aria-hidden="true"></div>
-                    <div class="board-row">
-                        <div class="board-coords-y" aria-hidden="true"></div>
-                        <div id="board"></div>
-                    </div>
+        <div class="game-screen hidden" id="game-screen">
+            <section class="turn-banner">
+                <div class="turn-kicker">Active Turn</div>
+                <div class="turn-headline">
+                    <span class="turn-swatch" id="turn-swatch"></span>
+                    <span class="turn-name" id="current-player">Blue</span>
+                    <span class="controller-badge" id="current-controller">Human</span>
+                    <span class="turn-suffix">to move</span>
                 </div>
-                <div class="board-caption">
-                    <span class="caption-kicker">Figure 01</span>
-                    <span class="caption-text">20&times;20 Placement Grid</span>
+                <div class="turn-actions">
+                    <div class="turn-hints">
+                        <kbd>R</kbd> rotate &middot; <kbd>F</kbd> flip &middot; click cell to place
+                    </div>
+                    <button class="pass-button" id="pass-button" type="button">Pass Turn</button>
                 </div>
             </section>
 
-            <aside class="sidebar right">
-                <section class="panel">
-                    <h2 class="panel-title"><span class="panel-num">02</span> Standings</h2>
-                    <p class="panel-sub">Live score & inventory</p>
-                    <div id="dashboard"></div>
-                </section>
-                <section class="panel">
-                    <h2 class="panel-title"><span class="panel-num">03</span> Selection</h2>
-                    <p class="panel-sub">Current piece preview</p>
-                    <div id="piece-preview">
-                        <div class="empty-preview">No piece selected</div>
+            <div class="rule"></div>
+
+            <main class="game-container">
+                <aside class="sidebar left">
+                    <section class="panel">
+                        <h2 class="panel-title"><span class="panel-num">01</span> Player Tray</h2>
+                        <p class="panel-sub">Remaining inventory</p>
+                        <div id="player-tray"></div>
+                    </section>
+                </aside>
+
+                <section class="board-stage">
+                    <div class="board-frame">
+                        <div class="board-coords-x" aria-hidden="true"></div>
+                        <div class="board-row">
+                            <div class="board-coords-y" aria-hidden="true"></div>
+                            <div id="board"></div>
+                        </div>
+                    </div>
+                    <div class="board-caption">
+                        <span class="caption-kicker">Figure 01</span>
+                        <span class="caption-text">20&times;20 Placement Grid</span>
                     </div>
                 </section>
-            </aside>
-        </main>
+
+                <aside class="sidebar right">
+                    <section class="panel">
+                        <h2 class="panel-title"><span class="panel-num">02</span> Standings</h2>
+                        <p class="panel-sub">Live score & inventory</p>
+                        <div id="dashboard"></div>
+                    </section>
+                    <section class="panel">
+                        <h2 class="panel-title"><span class="panel-num">03</span> Selection</h2>
+                        <p class="panel-sub">Current piece preview</p>
+                        <div id="piece-preview">
+                            <div class="empty-preview">No piece selected</div>
+                        </div>
+                    </section>
+                </aside>
+            </main>
+        </div>
 
         <div class="rule"></div>
 

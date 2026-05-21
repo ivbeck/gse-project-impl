@@ -5,6 +5,8 @@ let currentPlayerId = 0;
 let roundCounter = 1;
 let currentBoard = [];
 let hoverAnchor = null;
+let gameStarted = false;
+let currentControllerType = 'human';
 
 const HOVER_PREVIEW_CLASSES = [
     'hover-preview-valid',
@@ -18,22 +20,61 @@ async function loadState() {
     try {
         const resp = await fetch('/state');
         const state = await resp.json();
+        gameStarted = Boolean(state.started);
+        updateSessionVisibility(state);
+        if (!gameStarted) {
+            currentControllerType = 'human';
+            updatePassButton(state);
+            return;
+        }
         await loadPieceCatalog();
         currentPlayerId = state.current_player_id;
+        const currentPlayer = playerForId(state, currentPlayerId);
+        currentControllerType = (currentPlayer && currentPlayer.controller_type) || 'human';
         renderBoard(state.board);
-        renderTray(state.players[state.current_player_id]);
+        renderTray(currentPlayer);
         renderDashboard(state);
         updateTurnBanner(state);
+        updatePassButton(state);
     } catch (e) {
         console.error('Failed to load state:', e);
     }
 }
 
+function playerForId(state, playerId) {
+    return state.players.find(player => player.id === playerId) || state.players[playerId];
+}
+
+function controllerLabel(controllerType) {
+    return controllerType === 'ai' ? 'AI' : 'Human';
+}
+
+function currentPlayerCanAct(state) {
+    return gameStarted && currentControllerType === 'human' && (!state || state.game_status !== 'FINISHED');
+}
+
+function updateSessionVisibility(state) {
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    if (startScreen) startScreen.classList.toggle('hidden', Boolean(state.started));
+    if (gameScreen) gameScreen.classList.toggle('hidden', !state.started);
+    const statusLabel = document.querySelector('.status-label');
+    if (statusLabel) statusLabel.textContent = state.started ? 'Live Session' : 'Setup';
+}
+
+function updatePassButton(state) {
+    const passButton = document.getElementById('pass-button');
+    if (!passButton) return;
+    passButton.disabled = !currentPlayerCanAct(state);
+}
+
 function updateTurnBanner(state) {
-    const player = state.players[state.current_player_id];
+    const player = playerForId(state, state.current_player_id);
     const colorKey = player.color.toLowerCase();
     const label = COLOR_LABEL[colorKey] || player.color;
     document.getElementById('current-player').textContent = label;
+    const controller = document.getElementById('current-controller');
+    if (controller) controller.textContent = controllerLabel(player.controller_type || 'human');
     const swatch = document.getElementById('turn-swatch');
     if (swatch) swatch.style.background = PLAYER_HEX[colorKey] || '#14151a';
     /* Round counter: estimate from total placed pieces */
@@ -167,8 +208,10 @@ function renderHoverPreview(anchorRow, anchorCol) {
 function renderTray(player) {
     const tray = document.getElementById('player-tray');
     tray.innerHTML = '';
+    if (!player) return;
     const colorKey = player.color.toLowerCase();
     const colorHex = PLAYER_HEX[colorKey] || '#14151a';
+    const canSelect = currentPlayerCanAct() && (player.controller_type || 'human') === 'human';
     if (selectedPiece !== null && selectedPiece !== undefined && !player.remaining_pieces.includes(selectedPiece)) {
         deselectPiece();
     }
@@ -176,7 +219,11 @@ function renderTray(player) {
         const div = document.createElement('div');
         div.className = 'piece';
         div.dataset.pieceId = pid;
-        div.onclick = () => selectPiece(pid, colorHex);
+        if (canSelect) {
+            div.onclick = () => selectPiece(pid, colorHex);
+        } else {
+            div.classList.add('disabled');
+        }
         renderPieceGrid(pid, div, { cellSize: 6, colorHex });
         if (pid === selectedPiece) div.classList.add('selected');
         tray.appendChild(div);
@@ -196,9 +243,10 @@ function renderDashboard(state) {
         const colorKey = (p.color || PLAYER_COLORS[p.id]).toLowerCase();
         const colorHex = PLAYER_HEX[colorKey] || '#14151a';
         const label = COLOR_LABEL[colorKey] || p.color;
+        const controllerType = p.controller_type || 'human';
         const activeClass = (p.id === state.current_player_id) ? ' class="active"' : '';
         html += `<tr${activeClass}>`;
-        html += `<td><div class="player-cell"><span class="player-swatch" style="background:${colorHex}"></span>${label}</div></td>`;
+        html += `<td><div class="player-cell"><span class="player-swatch" style="background:${colorHex}"></span>${label}<span class="controller-badge">${controllerLabel(controllerType)}</span></div></td>`;
         html += `<td class="right">${score ? score.score : 0}</td>`;
         html += `<td class="right">${p.remaining_pieces.length}</td>`;
         html += '</tr>';
@@ -260,6 +308,7 @@ function selectPiece(pieceId, colorHex) {
 }
 
 function onCellClick(row, col) {
+    if (!currentPlayerCanAct()) return;
     if (selectedPiece === null || selectedPiece === undefined) return;
     submitMove({
         player_id: currentPlayerId,
@@ -271,6 +320,7 @@ function onCellClick(row, col) {
 }
 
 async function submitMove(move) {
+    if (!currentPlayerCanAct()) return;
     try {
         const resp = await fetch('/move', {
             method: 'POST',
@@ -280,7 +330,7 @@ async function submitMove(move) {
         const result = await resp.json();
         if (result.ok) {
             deselectPiece();
-            loadState();
+            await loadState();
         } else {
             alert(result.error || 'Illegal move');
         }
@@ -289,7 +339,69 @@ async function submitMove(move) {
     }
 }
 
+async function submitPass() {
+    if (!currentPlayerCanAct()) return;
+    try {
+        const resp = await fetch('/pass', { method: 'POST' });
+        const result = await resp.json();
+        if (result.ok) {
+            deselectPiece();
+            await loadState();
+        } else {
+            alert(result.error || 'Unable to pass');
+        }
+    } catch (e) {
+        console.error('Failed to pass turn:', e);
+    }
+}
+
+function setStartError(message) {
+    const error = document.getElementById('start-error');
+    if (error) error.textContent = message || '';
+}
+
+function setStartBusy(isBusy) {
+    document.querySelectorAll('[data-human-players]').forEach(button => {
+        button.disabled = isBusy;
+    });
+}
+
+async function startGame(humanPlayers) {
+    setStartError('');
+    setStartBusy(true);
+    try {
+        const resp = await fetch('/start', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ human_players: humanPlayers })
+        });
+        const result = await resp.json();
+        if (!resp.ok || !result.ok) {
+            setStartError(result.error || 'Unable to start session');
+            return;
+        }
+        deselectPiece();
+        await loadState();
+    } catch (e) {
+        console.error('Failed to start game:', e);
+        setStartError('Unable to start session');
+    } finally {
+        setStartBusy(false);
+    }
+}
+
+function bindSetupControls() {
+    document.querySelectorAll('[data-human-players]').forEach(button => {
+        button.addEventListener('click', () => {
+            startGame(Number(button.dataset.humanPlayers));
+        });
+    });
+    const passButton = document.getElementById('pass-button');
+    if (passButton) passButton.addEventListener('click', submitPass);
+}
+
 document.addEventListener('keydown', (e) => {
+    if (!currentPlayerCanAct()) return;
     if (selectedPiece === null || selectedPiece === undefined) return;
 
     if (e.key === 'r' || e.key === 'R') {
@@ -306,5 +418,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+bindSetupControls();
 setInterval(loadState, 2000);
 loadState();

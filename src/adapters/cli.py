@@ -23,3 +23,17 @@ class CLI(PresentationOutput):
     def prompt_replay(self) -> bool:
         response = input("Play again? (y/n): ")
         return response.lower() == 'y'
+
+    def prompt_human_player_count(self, max_players: int) -> int:
+        if max_players < 1:
+            raise ValueError("max_players must be positive")
+        while True:
+            response = input(f"How many human players? (1-{max_players}): ")
+            try:
+                human_players = int(response)
+            except ValueError:
+                print("Please enter a number.")
+                continue
+            if 1 <= human_players <= max_players:
+                return human_players
+            print(f"Please enter a value between 1 and {max_players}.")

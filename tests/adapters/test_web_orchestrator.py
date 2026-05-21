@@ -1,9 +1,11 @@
+from pathlib import Path
 from fastapi.testclient import TestClient
+import pytest
 from unittest.mock import Mock
 from adapters.web_orchestrator import create_web_orchestrator
 from bootstrap import create_game
 from core.piece_catalog import PieceCatalog
-from core.types import MoveResult, ConfigVO, Position
+from core.types import Move, MoveResult, ConfigVO, Position
 
 
 def _config():
@@ -20,10 +22,41 @@ def _config():
     )
 
 
-def _real_client():
+def _real_client(ai_player=None, legal_move_enumerator=None):
     session = create_game(_config())
-    app = create_web_orchestrator(session, None, Mock())
+    app = create_web_orchestrator(
+        session,
+        None,
+        Mock(),
+        ai_player=ai_player,
+        legal_move_enumerator=legal_move_enumerator,
+    )
     return TestClient(app)
+
+
+class _FirstLegalMoveAi:
+    def request_move(self, player_id: int, legal_moves: list[Move]) -> Move | None:
+        return legal_moves[0] if legal_moves else None
+
+
+class _ScriptedEnumerator:
+    def __init__(self, moves_by_player: dict[int, Move]):
+        self.moves_by_player = moves_by_player
+        self.calls: list[int] = []
+
+    def find_moves(self, board, player_id, remaining_piece_ids, is_first_move=False):
+        self.calls.append(player_id)
+        move = self.moves_by_player.get(player_id)
+        return [move] if move is not None else []
+
+
+class _NoLegalMovesEnumerator:
+    def __init__(self):
+        self.calls: list[int] = []
+
+    def find_moves(self, board, player_id, remaining_piece_ids, is_first_move=False):
+        self.calls.append(player_id)
+        return []
 
 
 def _orientation_grid(orientation):
@@ -87,6 +120,50 @@ def test_web_orchestrator_index_returns_html():
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/html; charset=utf-8"
     assert "<html" in response.text
+    assert "id=\"start-screen\"" in response.text
+
+
+@pytest.mark.parametrize("human_players", [1, 2, 3, 4])
+def test_web_orchestrator_start_accepts_valid_human_player_counts(human_players):
+    client = _real_client()
+
+    response = client.post("/start", json={"human_players": human_players})
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    state = client.get("/state").json()
+    assert state["started"] is True
+    assert state["human_players"] == human_players
+
+
+@pytest.mark.parametrize("human_players", [0, 5, "2", 2.0, None, True])
+def test_web_orchestrator_start_rejects_invalid_human_player_counts(human_players):
+    client = _real_client()
+
+    response = client.post("/start", json={"human_players": human_players})
+
+    assert response.status_code == 400
+    assert response.json()["ok"] is False
+
+
+@pytest.mark.parametrize(
+    ("human_players", "expected_controllers"),
+    [
+        (1, ["human", "ai", "ai", "ai"]),
+        (2, ["human", "human", "ai", "ai"]),
+        (4, ["human", "human", "human", "human"]),
+    ],
+)
+def test_web_orchestrator_state_maps_human_count_to_controller_types(
+    human_players,
+    expected_controllers,
+):
+    client = _real_client()
+
+    client.post("/start", json={"human_players": human_players})
+    state = client.get("/state").json()
+
+    assert [player["controller_type"] for player in state["players"]] == expected_controllers
 
 
 def test_web_orchestrator_state_returns_game_data():
@@ -114,6 +191,8 @@ def test_web_orchestrator_state_returns_game_data():
     assert "scores" in data
     assert "game_status" in data
     assert "consecutive_passes" in data
+    assert "started" in data
+    assert all("controller_type" in player for player in data["players"])
 
 
 def test_web_orchestrator_piece_catalog_exposes_core_shapes():
@@ -369,6 +448,99 @@ def test_web_orchestrator_illegal_move_keeps_current_player_id():
     assert client.get("/state").json()["current_player_id"] == 0
 
 
+def test_web_orchestrator_auto_resolves_ai_players_after_human_move():
+    enumerator = _ScriptedEnumerator({
+        1: Move(player_id=1, piece_id=0, orientation_index=0, row=0, col=19),
+        2: Move(player_id=2, piece_id=0, orientation_index=0, row=19, col=19),
+        3: Move(player_id=3, piece_id=0, orientation_index=0, row=19, col=0),
+    })
+    client = _real_client(
+        ai_player=_FirstLegalMoveAi(),
+        legal_move_enumerator=enumerator,
+    )
+    client.post("/start", json={"human_players": 1})
+
+    response = client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["ai_actions"] == [
+        {"player_id": 1, "action": "move", "piece_id": 0},
+        {"player_id": 2, "action": "move", "piece_id": 0},
+        {"player_id": 3, "action": "move", "piece_id": 0},
+    ]
+    state = client.get("/state").json()
+    assert state["current_player_id"] == 0
+    assert [len(player["remaining_pieces"]) for player in state["players"]] == [20, 20, 20, 20]
+    assert enumerator.calls == [1, 2, 3]
+
+
+def test_web_orchestrator_human_move_then_ai_turns_end_on_next_human():
+    enumerator = _ScriptedEnumerator({
+        2: Move(player_id=2, piece_id=0, orientation_index=0, row=19, col=19),
+        3: Move(player_id=3, piece_id=0, orientation_index=0, row=19, col=0),
+    })
+    client = _real_client(
+        ai_player=_FirstLegalMoveAi(),
+        legal_move_enumerator=enumerator,
+    )
+    client.post("/start", json={"human_players": 2})
+    first_response = client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+
+    second_response = client.post("/move", json={
+        "player_id": 1,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 19,
+    })
+
+    assert first_response.json()["ai_actions"] == []
+    assert second_response.json()["ai_actions"] == [
+        {"player_id": 2, "action": "move", "piece_id": 0},
+        {"player_id": 3, "action": "move", "piece_id": 0},
+    ]
+    assert client.get("/state").json()["current_player_id"] == 0
+
+
+def test_web_orchestrator_ai_passes_when_no_legal_move_exists():
+    enumerator = _NoLegalMovesEnumerator()
+    client = _real_client(legal_move_enumerator=enumerator)
+    client.post("/start", json={"human_players": 1})
+
+    response = client.post("/move", json={
+        "player_id": 0,
+        "piece_id": 0,
+        "orientation_index": 0,
+        "row": 0,
+        "col": 0,
+    })
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["ai_actions"] == [
+        {"player_id": 1, "action": "pass"},
+        {"player_id": 2, "action": "pass"},
+        {"player_id": 3, "action": "pass"},
+    ]
+    state = client.get("/state").json()
+    assert state["current_player_id"] == 0
+    assert state["consecutive_passes"] == 3
+    assert enumerator.calls == [1, 2, 3]
+
+
 def test_web_orchestrator_pass_changes_current_player_id():
     client = _real_client()
 
@@ -377,3 +549,12 @@ def test_web_orchestrator_pass_changes_current_player_id():
     assert response.status_code == 200
     assert response.json()["ok"] is True
     assert client.get("/state").json()["current_player_id"] == 1
+
+
+def test_web_orchestrator_ai_processing_does_not_import_adapters_from_core():
+    core_path = Path(__file__).resolve().parents[2] / "src" / "core"
+
+    for path in core_path.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        assert "from adapters" not in source
+        assert "import adapters" not in source
