@@ -47,3 +47,11 @@ def test_memento_contains_remaining_pieces(session):
     m = Memento.from_session(session)
     assert len(m.remaining_pieces) == 4
     assert all(len(pieces) == 21 for _, pieces in m.remaining_pieces)
+
+
+def test_memento_captures_last_placed_piece(session):
+    from core.types import Move
+    session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0))
+    m = Memento.from_session(session)
+    assert (0, 0) in m.last_placed_piece
+    assert (1, None) in m.last_placed_piece

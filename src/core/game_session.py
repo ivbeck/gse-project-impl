@@ -3,7 +3,7 @@ from core.types import ConfigVO, Move, MoveResult, GameStatus, PlayerScore
 from core.board import Board
 from core.piece_catalog import PieceCatalog
 from core.rule_set import RuleSet
-from core.scoring import Scoring
+from core.scoring import build_scoring
 
 if TYPE_CHECKING:
     from core.memento import Memento
@@ -15,7 +15,7 @@ class GameSession:
         config: ConfigVO,
         catalog: PieceCatalog,
         ruleset: RuleSet,
-        scoring: Scoring
+        scoring
     ):
         self.config = config
         self.catalog = catalog
@@ -29,10 +29,12 @@ class GameSession:
             i: list(piece_ids) for i in range(config.player_count)
         }
         self._is_first_move: dict[int, bool] = {i: True for i in range(config.player_count)}
+        self.last_placed_piece: dict[int, int | None] = {i: None for i in range(config.player_count)}
 
     @classmethod
-    def from_memento(cls, memento: "Memento", catalog: PieceCatalog, scoring: Scoring) -> "GameSession":
+    def from_memento(cls, memento: "Memento", catalog: PieceCatalog) -> "GameSession":
         ruleset = RuleSet(catalog, memento.config)
+        scoring = build_scoring(memento.config, catalog)
         session = cls(memento.config, catalog, ruleset, scoring)
         if len(memento.board_state) != memento.config.board_height:
             raise ValueError("memento board height does not match config")
@@ -49,6 +51,10 @@ class GameSession:
             player_id: flag
             for player_id, flag in memento.is_first_move
         }
+        session.last_placed_piece = {i: None for i in range(memento.config.player_count)}
+        session.last_placed_piece.update(
+            {player_id: piece_id for player_id, piece_id in memento.last_placed_piece}
+        )
         return session
 
     def is_first_move(self, player_id: int) -> bool:
@@ -72,6 +78,7 @@ class GameSession:
             self.board.apply_move(move, orientation)
             self.remaining_pieces[move.player_id].remove(move.piece_id)
             self._is_first_move[move.player_id] = False
+            self.last_placed_piece[move.player_id] = move.piece_id
             self.consecutive_passes = 0
         return result
 
@@ -89,4 +96,4 @@ class GameSession:
         return GameStatus.IN_PROGRESS
 
     def final_scores(self) -> list[PlayerScore]:
-        return self.scoring.rank(self.remaining_pieces)
+        return self.scoring.rank(self.remaining_pieces, self.last_placed_piece)

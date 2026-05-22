@@ -266,6 +266,11 @@ def create_web_orchestrator(
             "last_event": last_event,
             "skipped_players": recent_skipped_players,
             "current_player_has_legal_moves": current_player_has_legal_moves,
+            "starting_positions": {
+                str(pid): {"row": pos.row, "col": pos.col}
+                for pid, pos in session.config.starting_positions.items()
+            },
+            "scoring_rule": session.config.scoring_rule,
         }
 
     @app.post("/start")

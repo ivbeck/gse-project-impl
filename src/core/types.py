@@ -46,6 +46,7 @@ class ConfigVO:
     board_height: int
     player_count: int
     starting_positions: dict[int, Position]
+    scoring_rule: str = "classic"
 
 
 class ConfigBuilder:
@@ -54,6 +55,7 @@ class ConfigBuilder:
         self._board_height: int | None = None
         self._player_count: int | None = None
         self._starting_positions: dict[int, Position] = {}
+        self._scoring_rule: str = "classic"
 
     def with_board_dimensions(self, width: int, height: int) -> ConfigBuilder:
         self._board_width = width
@@ -66,6 +68,10 @@ class ConfigBuilder:
 
     def with_starting_positions(self, positions: dict[int, Position]) -> ConfigBuilder:
         self._starting_positions = dict(positions)
+        return self
+
+    def with_scoring_rule(self, scoring_rule: str) -> ConfigBuilder:
+        self._scoring_rule = scoring_rule
         return self
 
     def build(self) -> ConfigVO:
@@ -82,9 +88,12 @@ class ConfigBuilder:
         for position in self._starting_positions.values():
             if not (0 <= position.row < self._board_height and 0 <= position.col < self._board_width):
                 raise ValueError("starting positions must be on the board")
+        if self._scoring_rule not in {"classic", "duo"}:
+            raise ValueError("scoring_rule must be 'classic' or 'duo'")
         return ConfigVO(
             board_width=self._board_width,
             board_height=self._board_height,
             player_count=self._player_count,
             starting_positions=dict(self._starting_positions),
+            scoring_rule=self._scoring_rule,
         )

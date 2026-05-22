@@ -4,6 +4,7 @@ let legalMoves = [];
 let currentPlayerId = 0;
 let roundCounter = 1;
 let currentBoard = [];
+let startingCells = [];
 let hoverAnchor = null;
 let gameStarted = false;
 let gameFinished = false;
@@ -37,6 +38,7 @@ async function loadState() {
         currentPlayerId = state.current_player_id;
         const currentPlayer = playerForId(state, currentPlayerId);
         currentControllerType = (currentPlayer && currentPlayer.controller_type) || 'human';
+        startingCells = Object.values(state.starting_positions || {}).map(p => `${p.row},${p.col}`);
         renderBoard(state.board);
         renderTray(currentPlayer);
         renderDashboard(state);
@@ -157,14 +159,9 @@ function renderBoard(board) {
             if (cell !== null && cell !== undefined) {
                 div.classList.add(PLAYER_COLORS[cell]);
             }
-            /* Mark corner cells subtly */
-            const lastRow = board.length - 1;
-            const lastCol = cols - 1;
-            const isCorner = (ri === 0 && ci === 0) ||
-                             (ri === 0 && ci === lastCol) ||
-                             (ri === lastRow && ci === 0) ||
-                             (ri === lastRow && ci === lastCol);
-            if (isCorner && cell === null) div.classList.add('corner-marker');
+            /* Mark the configured starting cells subtly (corners in Classic, interior in Duo) */
+            const isStart = startingCells.includes(`${ri},${ci}`);
+            if (isStart && cell === null) div.classList.add('corner-marker');
             div.dataset.row = ri;
             div.dataset.col = ci;
             div.onclick = () => onCellClick(ri, ci);

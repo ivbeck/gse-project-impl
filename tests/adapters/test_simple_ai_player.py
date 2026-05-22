@@ -6,7 +6,6 @@ from core.board import Board
 from core.game_session import GameSession
 from core.legal_move_enumerator import LegalMoveEnumerator
 from core.piece_catalog import PieceCatalog
-from core.scoring import Scoring
 from adapters.json_state_repo import JsonStateRepo
 
 
@@ -92,7 +91,7 @@ def test_simple_ai_player_golden_from_json_state():
     repo = JsonStateRepo()
     memento = repo.restore(state_json)
     catalog = PieceCatalog()
-    session = GameSession.from_memento(memento, catalog, Scoring(catalog))
+    session = GameSession.from_memento(memento, catalog)
     enumerator = LegalMoveEnumerator(session.catalog, session.ruleset)
     legal_moves = enumerator.find_moves(
         session.board,

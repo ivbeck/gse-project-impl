@@ -10,6 +10,7 @@ class JsonStateRepo:
                 "board_width": memento.config.board_width,
                 "board_height": memento.config.board_height,
                 "player_count": memento.config.player_count,
+                "scoring_rule": memento.config.scoring_rule,
                 "starting_positions": {
                     str(pid): {"row": pos.row, "col": pos.col}
                     for pid, pos in sorted(memento.config.starting_positions.items())
@@ -26,6 +27,10 @@ class JsonStateRepo:
                 (player_id, flag)
                 for player_id, flag in memento.is_first_move
             ],
+            "last_placed_piece": [
+                [player_id, piece_id]
+                for player_id, piece_id in memento.last_placed_piece
+            ],
         }, sort_keys=True)
 
     def restore(self, data: str) -> Memento:
@@ -39,6 +44,7 @@ class JsonStateRepo:
                 int(pid): Position(pos["row"], pos["col"])
                 for pid, pos in config_data["starting_positions"].items()
             })
+            .with_scoring_rule(config_data.get("scoring_rule", "classic"))
             .build()
         )
         board_state = tuple(
@@ -53,6 +59,10 @@ class JsonStateRepo:
             (item[0], item[1])
             for item in parsed["is_first_move"]
         )
+        last_placed_piece = tuple(
+            (item[0], item[1])
+            for item in parsed.get("last_placed_piece", [])
+        )
         return Memento(
             config=config,
             board_state=board_state,
@@ -60,4 +70,5 @@ class JsonStateRepo:
             remaining_pieces=remaining_pieces,
             consecutive_passes=parsed["consecutive_passes"],
             is_first_move=is_first_move,
+            last_placed_piece=last_placed_piece,
         )
