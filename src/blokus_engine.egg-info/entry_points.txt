@@ -1,0 +1,2 @@
+[console_scripts]
+blokus-engine = app:main

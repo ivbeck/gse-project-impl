@@ -3,14 +3,15 @@ name = "blokus-engine"
 version = "0.1.0"
 description = "Configurable Blokus game engine"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi>=0.136.1",
+    "httpx>=0.27.0",
+    "jinja2>=3.1.6",
+    "uvicorn>=0.47.0",
+]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "ruff>=0.4",
-    "mypy>=1.10",
-]
+dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.10"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -19,5 +20,19 @@ filterwarnings = ["error"]
 [tool.ruff]
 src = ["src"]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [tool.mypy]
 ignore_missing_imports = true
+
+[dependency-groups]
+dev = ["pytest>=9.0.3"]
+
+[project.scripts]
+blokus-engine = "app:main"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
