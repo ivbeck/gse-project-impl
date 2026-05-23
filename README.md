@@ -16,14 +16,32 @@ python -m venv .venv
 # or (cmd): .\.venv\Scripts\activate
 ```
 
+Bootstrap `pip` in the venv (if needed)
+
+Some Python installations or freshly created virtual environments may not include `pip` by default. If you see errors like "No module named pip" or later see "uv missing", bootstrap `pip` before installing other packages.
+
+```bash
+# In the activated venv, try ensurepip first (preferred)
+python -m ensurepip --upgrade
+python -m pip install --upgrade pip setuptools wheel
+
+# If ensurepip is not available, use get-pip.py as a fallback
+curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
+rm get-pip.py
+
+# Prefer 'python -m pip' so the pip used matches the active interpreter
+python -m pip --version
+```
+
 2. Install `uv` (project task runner) and sync dependencies:
 
 ```bash
 # Option A — install into the active venv
-pip install --upgrade pip
-pip install uv
+python -m pip install --upgrade pip
+python -m pip install uv
 
-# Option B — install uv with pipx (keeps it isolated)
+# Option B — install uv with pipx (keeps it isolated from the venv)
 pipx install uv
 
 # Then sync project dependencies defined in pyproject.toml
