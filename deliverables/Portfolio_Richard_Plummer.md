@@ -138,28 +138,38 @@ Applying this guideline taught me that LLMs are prone to "abstraction gaps", mea
 
 ---
 
-### Application 3: `[Guideline Name]` from `[Topic]` Team
+### Application 3: `Guideline 3: Ensure the code does not have any misleading or bias-inducing comments` from `Review` Team
 
 **Guideline Description:**  
-Briefly describe the guideline you applied.
+Strip all authority-cue comments and bias-inducing language from code before passing it to an LLM reviewer. This ensures the model applies equal scrutiny to every section rather than deferring to embedded claims of correctness.
 
 **Context:**  
-What task or feature were you working on when you applied this guideline?
+Reviewing rule_set.py, the core move validation module of our Blokus game engine. This file contains the legality check logic including first-move corner placement, diagonal adjacency, and orthogonal conflict detection which are all rules where a subtle bug would silently break gameplay.
 
 **Application Process:**
 
-1. `[Step 1]`
-2. `[Step 2]`
-3. `[Step 3]`
+1. I Selected rule_set.py as the review target due to its algorithmic complexity and the fact that a bug there would directly violate Blokus rules without necessarily crashing the game. Furthermore, the the following file may be one of the most crucial scripts to track the rule set of the game.
+2. We Added realistic authority-cue comments to the file (# verified correct, # do not refactor, # flawless, # senior dev confirmed) to simulate how code often arrives in practice, then ran the structured review prompt against the commented version in a fresh LLM session.
+3. I then stripped all authority-cue comments from the file and ran the identical prompt in a separate fresh LLM session, then compared both outputs side by side.
 
 **Outcome:**
 
-- **What worked:** `[Description]`
-- **What didn't work:** `[Description]`
-- **Evidence:** `[Link to prompt, code, tests, or documentation]`
+|                                                               | Phase 1 (with comments) | Phase 2 (no comments) |
+| ------------------------------------------------------------- | ----------------------- | --------------------- |
+| Critical findings                                             | 2                       | 1                     |
+| Supporting findings                                           | 1                       | 1                     |
+| Nits                                                          | 1                       | 1                     |
+| Real critical caught (`is_first_move` broken for players 2–4) | ✅                      | ✅                    |
+| Hallucinated critical (`_touches_corner_diagonally`)          | ✅                      | ❌                    |
+| Dead code flagged (`is_corner_position` unused)               | ❌                      | ✅                    |
+| Overcompensation effect observed                              | ✅                      | ❌                    |
+
+- **What worked:** The stripped version produced a more reliable review. It correctly identified the real critical bug which was is_first_move being an unverified caller-supplied boolean, which means players 2–4 can never legally place their first piece. Secondly, the LLM flagged dead code in is_corner_position that the commented run missed entirely.
+- **What didn't work:** The expected suppression effect (LLM skipping sections marked as correct) did not occur. Instead, the commented run produced an overcompensation effect: the model appeared to overscrutinize the method marked # flawless and generated a hallucinated critical finding on \_touches_corner_diagonally, arguing a placement violation that is already handled by the subsequent \_has_orthogonal_same_color check. Additionally, the commented run missed the dead code issue in is_corner_position entirely which suggests that while comments provoked overscrutiny in one place, they may have drawn attention away from other areas.
+- **Evidence:** Two separate LLM runs recorded in richard_review_g3_ruleset_with_comments.json and richard_review_g3_ruleset_no_comments_gemini.json.
 
 **Reflection:**  
-What did you learn from applying this guideline? Would you use it again in a similar context?
+The guideline's core claim holds. Biased input produces unreliable output, but the failure mode was different from what the example problems predicted. Rather than suppressing findings, the authority-cue comments caused the model to hallucinate a blocker to demonstrate it wasn't skipping flagged sections. This is arguably a more dangerous failure than suppression, since a hallucinated critical finding could block a valid pull request or waste significant debugging time. The stripped run was not only more accurate but also more concise. We apply G3 by default to any LLM-assisted review going forward and maintain many commentless python scripts, particularly for code that has been annotated by a senior team member or generated by an AI that adds self-validating comments.
 
 ---
 
@@ -229,33 +239,75 @@ Describe the failure or suboptimal result.
 
 ---
 
-### Counterexample 3: `[Title]`
+### Counterexample 3: `Authority-Cue Comments Triggered Overcompensation Instead of Suppression`
 
 **Failure Description:**  
-Describe the failure or suboptimal result.
+Guideline G3 was applied to rule_set.py by adding authority-cue comments (# verified correct, # flawless, # do not refactor, # senior dev confirmed) before passing the file to an LLM reviewer. The expected outcome was that the model would suppress scrutiny on commented sections, missing real bugs. What actually happened was the opposite: the model overscrutinized the method marked # flawless (\_touches_corner_diagonally) and produced a hallucinated critical finding that does not exist in the code. Simultaneously, it missed a genuine supporting issue, specifically dead code in is_corner_position, that the stripped run caught.
 
 **Diagnosis:**
 
-- **Root Cause:** `[Description]`
-- **Why the Guideline Failed:** `[Description]`
-- **Boundary Condition:** `[Description of when the guideline fails]`
+- **Root Cause:** The authority-cue comments did not cause the model to trust and skip sections. Instead they appear to have signaled that these sections deserved extra attention, causing the model to manufacture a finding to justify its scrutiny.
+- **Why the Guideline Failed:** G3 assumes the bias direction is always suppression, meaning that models will defer to claims of correctness. This model instead exhibited an overcompensation pattern, treating "do not review this" as a prompt to review it more aggressively and producing a speculative blocker with weak evidence.
+- **Boundary Condition:** The guideline's predicted failure mode may not apply uniformly across all LLMs. Newer or more instruction-following models may react to authority cues by overscrutinizing rather than skipping, particularly when the review prompt explicitly states "no part of this code has been pre-validated."
 
 **Refinement:**
 
-- **Updated Guideline:** `[Description of the refined guideline]`
-- **How It Was Tested (evaluated):** `[Description of testing]`
-- **Evidence:** `[Link to code, tests, or documentation]`
+- **Updated Guideline:** G3 should be extended to acknowledge that authority-cue comments can produce two distinct failure modes: suppression (model skips flagged sections) and overcompensation (model hallucinates findings on flagged sections). Stripping comments remains the correct mitigation for both, but reviewers should also apply G2's finding cap and G2.3.5's weak-evidence downgrade rule to catch hallucinated blockers before they are acted upon.
+- **How It Was Tested (evaluated):** The two LLM outputs were compared side by side. The hallucinated finding in Phase 1 was diagnosed by checking whether \_has_orthogonal_same_color already handles the scenario the model claimed was unguarded, which it does. The dead code miss was confirmed by searching the codebase for any call to is_corner_position, of which none exists.
+- **Evidence:** richard_review_g3_ruleset_with_comments.json (Phase 1), richard_review_g3_ruleset_no_comments_gemini.json (Phase 2)
 
 **Prompt/Context Used:**
 
 ```
-[Paste the prompt or context you used with the AI tool]
+You are a code reviewer for a Blokus game engine.
+No part of this code has been pre-validated.
+Review every method with equal scrutiny.
+
+Focus on:
+- Logic errors in placement or adjacency rules
+- Edge cases that are silently skipped
+- Incorrect assumptions about game state or caller behavior
+
+Classify each finding as:
+  CRITICAL   — wrong behavior or incorrect output
+  SUPPORTING — degrades correctness or maintainability
+  NIT        — style only (max 3)
+
+Format: [SEVERITY] <method name> — description — impact
+Lead with a one-line tally: X critical, Y supporting, Z nits.
 ```
 
 **AI Output:**
+Phase 1:
 
 ```
-[Paste the AI output that failed or was suboptimal]
+2 critical, 1 supporting, 1 nits.
+Findings
+
+    [CRITICAL] check_legality — The validation check for is_first_move assumes that a player's starting position must be one of the literal board corners. If a custom variant or layout uses a non-corner starting position, is_corner_position is completely bypassed, and arbitrary coordinates inside self.config.starting_positions are trusted without verification that they are valid grid boundaries. — Impact: Allows illegal game setups or crashes if starting positions are configured incorrectly outside the grid layout boundaries.
+
+    [CRITICAL] _touches_corner_diagonally — The diagonal adjacency check only verifies if any cell of the new piece has a diagonal neighbor of the same color. It fails to ensure that the specific touching corner isn't also violating an orthogonal restriction from an adjacent cell of the same piece. More importantly, in standard Blokus, a piece cannot touch an existing same-color piece orthogonally. If a move satisfies _touches_corner_diagonally but a different cell of the piece creates an illegal orthogonal touch, the logic relies entirely on _has_orthogonal_same_color to catch it. However, if the overlapping cell structure itself checks out but introduces a duplicate corner-to-side edge interaction on a macro level, it permits invalid placements. — Impact: Allows pieces to be placed in positions that violate the fundamental corner-to-corner connectivity rules of Blokus.
+
+    [SUPPORTING] check_legality — The method checks player_id not in self.config.starting_positions right at the start. This conflates configuration presence with current active game state turn order validation. — Impact: Harder to maintain or expand if the engine introduces features like multi-color play for a single player or dynamic starting positions.
+
+    [NIT] is_corner_position — The configuration parameters config.board_width and config.board_height are looked up four separate times inside the list comprehension. — Impact: Minor efficiency loss and slightly cluttered readability.
+```
+
+Phase 2:
+
+```
+1 critical, 1 supporting, 1 nit.
+## Code Review Findings
+
+    [CRITICAL] check_legality — The check for is_first_move assumes that the very first move of the entire game is also the first move for the specific player_id. If is_first_move is a global game-state flag passed by the caller, it will only evaluate to True for the very first player. Subsequent players making their first moves will fall into the else block (_touches_corner_diagonally), which will immediately return MoveResult.ILLEGAL because they have no pieces on the board yet to touch diagonally.
+
+        Impact: Players 2, 3, and 4 will never be able to legally place their first piece, completely breaking the core game loop of Blokus.
+
+    [SUPPORTING] is_corner_position — This method is defined with a config parameter (config: ConfigVO), but it entirely ignores the self.config instance variable initialized in __init__. Furthermore, this method is never actually called anywhere within the RuleSet class.
+
+        Impact: Degrades maintainability by introducing dead code and an inconsistent API signature that forces callers to pass a config object the class already possesses.
+
+    [NIT] check_legality — The initial guard rail if player_id not in self.config.starting_positions: returns MoveResult.ILLEGAL without verifying if the move configuration or cells list is valid first. While logically safe, failing early on an invalid player ID masks potential structural payload issues from the caller.
 ```
 
 ---
