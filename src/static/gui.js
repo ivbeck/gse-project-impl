@@ -10,6 +10,8 @@ let gameStarted = false;
 let gameFinished = false;
 let currentControllerType = 'human';
 let currentPlayerHasLegalMoves = null;
+let maxHumanSeats = 4;
+let startBusy = false;
 
 const HOVER_PREVIEW_CLASSES = [
     'hover-preview-valid',
@@ -26,6 +28,7 @@ async function loadState() {
         gameStarted = Boolean(state.started);
         gameFinished = state.game_status === 'FINISHED';
         currentPlayerHasLegalMoves = state.current_player_has_legal_moves;
+        updateModeLabels(state);
         updateSessionVisibility(state);
         if (!gameStarted) {
             currentControllerType = 'human';
@@ -537,10 +540,28 @@ function setStartError(message) {
     if (error) error.textContent = message || '';
 }
 
-function setStartBusy(isBusy) {
+function refreshStartOptions() {
     document.querySelectorAll('[data-human-players]').forEach(button => {
-        button.disabled = isBusy;
+        const overSeatLimit = Number(button.dataset.humanPlayers) > maxHumanSeats;
+        button.disabled = startBusy || overSeatLimit;
+        button.classList.toggle('disabled', overSeatLimit);
     });
+}
+
+function setStartBusy(isBusy) {
+    startBusy = isBusy;
+    refreshStartOptions();
+}
+
+function updateModeLabels(state) {
+    const isDuo = state && state.scoring_rule === 'duo';
+    const brand = document.getElementById('brand-name');
+    if (brand) brand.textContent = isDuo ? 'Blokus Duo' : 'Blokus';
+    /* Configured player count caps the selectable human seats (Duo allows 2). */
+    maxHumanSeats = (state && Array.isArray(state.players) && state.players.length)
+        ? state.players.length
+        : 4;
+    refreshStartOptions();
 }
 
 async function startGame(humanPlayers) {

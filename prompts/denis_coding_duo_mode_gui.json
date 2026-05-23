@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "title": "Duo-Mode GUI Guardrails — Disable Excess Seat Buttons & Add Duo Title",
+    "course": "Generative Software Engineering",
+    "date": "2026-05-23",
+    "author": "Denis",
+    "purpose": "Fix the web GUI so that, when the engine is launched in Duo mode (2 players), the start-screen buttons for selecting 3 and 4 human players are disabled, and the title in the top-left corner shows a 'Duo' suffix ('Blokus Duo'). Both behaviours are derived from data already exposed by the /state endpoint, with no backend changes.",
+    "artifacts_produced": [
+      "tests/adapters/test_web_gui_mode_labels_static.py (new)",
+      "src/templates/game.html (modified)",
+      "src/static/gui.js (modified)",
+      "src/static/style.css (modified)"
+    ],
+    "model": "claude-opus-4-7",
+    "tool": "Claude Code (VSCode extension)",
+    "approach": "Test-Driven Development (superpowers:test-driven-development skill), following the repo's existing 'static GUI test' convention (assert on the contents of gui.js / game.html / style.css).",
+    "inputs_referenced": [
+      "AGENTS.md",
+      "src/static/gui.js",
+      "src/templates/game.html",
+      "src/static/style.css",
+      "src/adapters/web_orchestrator.py",
+      "src/adapters/json_config_source.py",
+      "src/core/game_session.py",
+      "tests/adapters/test_web_gui_hover_preview_static.py",
+      "tests/adapters/test_web_gui_starting_cells_static.py"
+    ]
+  },
+  "conversation": [
+    {
+      "turn": 1,
+      "role": "user",
+      "content": "Check the gui implementation in our blokus engine. There are two modes: classic and duo, however in gui buttons for selecting 3 - 4 players are clickable in duo mode, which doesn't make sense. Make them disabled in duo mode and also add a Duo suffix to the title in left corner if the gui is launched in duo mode."
+    },
+    {
+      "turn": 2,
+      "role": "assistant",
+      "summary": "Explored the web GUI (src/static/gui.js, src/templates/game.html, src/static/style.css) and the FastAPI orchestrator. Established that the mode is selected at launch via the --duo flag (DUO_CONFIG_JSON: 14x14, player_count=2, scoring_rule='duo') and that the /state endpoint already exposes both 'scoring_rule' and a 'players' array sized to the configured player count — even before the game starts. Confirmed via a FastAPI TestClient probe that Duo returns scoring_rule='duo' with 2 players and Classic returns 'classic' with 4. Implemented the fix test-first (4 failing static tests -> minimal code -> green), then ran the full suite.",
+      "investigation_findings": [
+        "Mode is launch-time only: src/app.py --duo -> mode='duo' -> DUO_CONFIG_JSON in web_main.py/bootstrap.py.",
+        "/state already returns 'scoring_rule' (src/adapters/web_orchestrator.py) and 'players' derived from session.remaining_pieces, which is keyed 0..player_count-1, so it is populated on the start screen.",
+        "Start buttons use data-human-players attributes (1..4); /start already validates 1<=humans<=player_count server-side, so this change is a UX guardrail over existing validation.",
+        "The repo tests the GUI via 'static' tests that assert on the JS/HTML/CSS file text (no headless browser); followed that convention.",
+        "An existing .start-option:disabled rule used 'cursor: wait' (the transient busy state), so a distinct '.start-option.disabled' class was needed for the permanently-unavailable (mode-capped) buttons."
+      ],
+      "design_decisions": [
+        "Drove the disabling from the configured player count (state.players.length) rather than hard-coding '3 and 4', so it stays data-driven (consistent with AGENTS.md 'configuration is data, not constants'); Duo's 2-player config naturally greys out seats 3 and 4.",
+        "Detected Duo via state.scoring_rule === 'duo' for the title, the same signal the engine already serialises.",
+        "Gave the title span an id ('brand-name') and set its text to 'Blokus Duo' / 'Blokus' from a new updateModeLabels(state) called inside loadState(), so it is correct on the start screen and stays in sync with the existing 2s polling.",
+        "Refactored setStartBusy into refreshStartOptions() + a startBusy flag so the transient 'busy' disabling (during a /start request) and the permanent mode-cap disabling cannot overwrite each other.",
+        "Added a '.start-option.disabled' CSS rule (cursor: not-allowed, dimmed, no hover lift) — higher specificity than ':disabled' so the mode-capped look wins over the 'busy' look."
+      ],
+      "changes": [
+        {
+          "file": "src/templates/game.html",
+          "change": "Added id=\"brand-name\" to the <span class=\"brand-name\">Blokus</span> title in the masthead-left so JS can update it."
+        },
+        {
+          "file": "src/static/gui.js",
+          "change": "Added module state maxHumanSeats / startBusy; added refreshStartOptions() (disables and marks any [data-human-players] button whose value exceeds maxHumanSeats); rewrote setStartBusy() to delegate to it; added updateModeLabels(state) (sets brand title to 'Blokus Duo' when scoring_rule==='duo' and caps maxHumanSeats to state.players.length); called updateModeLabels(state) early in loadState()."
+        },
+        {
+          "file": "src/static/style.css",
+          "change": "Added .start-option.disabled (cursor: not-allowed, opacity 0.5, no transform/shadow) plus a no-op hover/focus override, distinct from the existing .start-option:disabled 'cursor: wait' busy style."
+        },
+        {
+          "file": "tests/adapters/test_web_gui_mode_labels_static.py",
+          "change": "New static test file (4 tests): brand-name id present in HTML; gui.js adds the 'Blokus Duo' suffix from state.scoring_rule; gui.js disables seat buttons via maxHumanSeats/refreshStartOptions; CSS defines .start-option.disabled."
+        }
+      ],
+      "verification": [
+        "RED: new test file failed 4/4 for 'feature missing' before implementation.",
+        "GREEN: new test file passes 4/4 after implementation.",
+        "Full suite: 180 passed (uv run pytest).",
+        "Runtime contract via FastAPI TestClient on /state before start — Duo: scoring_rule='duo', players=2; Classic: scoring_rule='classic', players=4."
+      ],
+      "notes": [
+        "AGENTS.md says 'Milestone 2 (Duo) is out of scope', but Duo mode is already fully present in the codebase (--duo flag, DUO_CONFIG_JSON, DuoScoring); that note is stale and the user explicitly requested this work, so user instruction takes precedence. No new Duo-named module paths were introduced.",
+        "No commit was made (not requested); the repo workflow is feature-branch + PR, no direct commits to main."
+      ]
+    },
+    {
+      "turn": 3,
+      "role": "user",
+      "content": "Export this conversation to prompts/ as json file with prefix denis_",
+      "ide_context": {
+        "opened_file": "/srv/code/gse-project-impl/src/static/style.css"
+      }
+    },
+    {
+      "turn": 4,
+      "role": "assistant",
+      "summary": "Inspected the existing prompts/ exports, identified the curated denis_*.json convention (metadata + numbered conversation turns with content/summary and structured detail, as opposed to the raw machine session dumps used by other authors), and wrote this file (prompts/denis_coding_duo_mode_gui.json) capturing the request, the investigation, the design rationale, the exact code changes, and the verification results."
+    }
+  ]
+}
