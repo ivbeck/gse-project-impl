@@ -1,46 +1,80 @@
 # Blokus Project
 
-A Python implementation of the Blokus game engine following the project's Hexagonal (Ports & Adapters) architecture.
+A Python implementation of the Blokus game engine following the project's Hexagonal (Ports & Adapters) architecture. The project provides a console (CLI) player and an optional local web GUI powered by FastAPI + Uvicorn.
 
-**Implementation language:** Python (managed with [`uv`](https://docs.astral.sh/uv/)). See [AGENTS.md](AGENTS.md) for coding-agent context and developer commands.
+**Implementation language:** Python (managed with `uv`). See [AGENTS.md](AGENTS.md) for coding-agent context and developer commands.
 
-## Quick start
+## Getting started (summary)
 
-Prerequisites
+These steps assume a fresh clone of the repository. Recommended: use a Python virtual environment.
 
-- Python 3.12 or newer (see `requires-python` in `pyproject.toml`).
-- `uv` for environment & task management — install via the official guide: https://docs.astral.sh/uv/ (example using `pipx` shown below).
+1. Create and activate a virtual environment (Windows example):
 
-Install & sync project dependencies
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1   # PowerShell
+# or (cmd): .\.venv\Scripts\activate
+```
+
+2. Install `uv` (project task runner) and sync dependencies:
 
 ```bash
-# (optional) install uv if you don't have it
+# Option A — install into the active venv
+pip install --upgrade pip
+pip install uv
+
+# Option B — install uv with pipx (keeps it isolated)
 pipx install uv
 
-# sync environment and install dependencies defined in pyproject.toml
+# Then sync project dependencies defined in pyproject.toml
 uv sync
 ```
 
-Run the test suite
+3. Verify tests run:
 
 ```bash
 uv run pytest
 ```
 
-Run the application
+## Run modes
 
-The project exposes a module entry point; run it with:
+CLI (console) mode — plays in the terminal
 
 ```bash
 uv run python -m app
-# or run the installable script entrypoint (if registered in your environment):
+# or, if you have installed the package entrypoint in the active environment:
 uv run blokus-engine
 ```
 
-Notes
+Web GUI mode — starts a local FastAPI server and serves the browser UI
 
-- The repository uses `uv` for all development tasks (installing, running, testing). Do not introduce alternative environment managers without agreement.
-- No network access is allowed at runtime for the core engine (see project constraints in [AGENTS.md](AGENTS.md)).
+```bash
+uv run python -m app --gui
+# or (installed entrypoint):
+uv run blokus-engine --gui
+```
+
+Open your browser at: http://127.0.0.1:8000
+
+Play Blokus Duo (14x14, 2 players) with the GUI or CLI by adding `--duo`:
+
+```bash
+uv run python -m app --gui --duo
+```
+
+Notes on commands
+
+- The correct wrapper is `uv run ...`. Do NOT run `python -m uv run ...` — that invocation is incorrect and will fail. If the `blokus-engine` script entrypoint is not installed into your environment, use `uv run python -m app` instead.
+- If you prefer to run the web server directly (without `uv`), you can run `python -m src.web_main` from a configured environment that puts `src/` on `PYTHONPATH`, but using `uv run python -m app --gui` is the supported, reproducible path.
+
+## Troubleshooting
+
+- I only see console output and no browser UI: you likely started the CLI (no `--gui` flag) or used the wrong `uv` invocation. Re-run with `uv run python -m app --gui`.
+- Server not reachable at http://127.0.0.1:8000: check the terminal where you started the app — Uvicorn logs should show the server URL (look for "Uvicorn running on http://127.0.0.1:8000"). If port 8000 is in use, edit `src/web_main.py` and change the `port=` argument passed to `uvicorn.run(...)`, then restart.
+- Missing dependencies / import errors: ensure `uv sync` completed successfully and that you activated the venv before running commands. If you installed `uv` globally with `pipx`, ensure you still activate the project venv when running Python module commands.
+- Static UI not loading or template errors: verify `src/static/` and `src/templates/game.html` exist. The FastAPI orchestrator mounts `/static` and serves `game.html` at `/`.
+
+If you still have issues, share the terminal output (copy the last ~100 lines) and I can help diagnose further.
 
 ## Development workflow
 
@@ -56,17 +90,26 @@ Notes
 ## Useful commands
 
 ```bash
-# Install uv (optional)
+# Create venv (Windows PowerShell shown)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install uv (either in venv or with pipx)
+pip install uv
+# or
 pipx install uv
 
-# Install / sync deps
+# Sync project deps
 uv sync
 
 # Run tests
 uv run pytest
 
-# Run the app
+# Run CLI
 uv run python -m app
+
+# Run web GUI
+uv run python -m app --gui
 ```
 
 ## Tasks & Responsibilities
