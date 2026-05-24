@@ -15,43 +15,94 @@
 
 ## 1. Owned Package Contributions
 
-### Package Name: `[Package Name]`
+### Package Name: `Requirements Guideline 3: Proactively Detect and Resolve Ambiguity Through Clarification`
 
-**Description:**  
-Briefly describe the package you owned and what it does.
+**Description:**
+Applied an LLM-assisted ambiguity detection workflow to the Blokus requirements
+specification. Flagged underspecified requirements, resolved them as a team, and
+embedded the answers back into versioned specification documents.
 
 **Responsibilities:**
 
-- `[Responsibility 1]`
-- `[Responsibility 2]`
-- `[Responsibility 3]`
+- Prompting an LLM to scan the initially created SPEC.md for ambiguous natural language statements
+- Coordinating a team review (an in-person meeting) of the generated ambiguity log and filling in resolution answers
+- Based on the ambiguity log and potential hallucinations, I separate the SPEC.md file into SPEC_M1.md and SPEC_M2.md
+- Feeding resolved answers back to an LLM to produce updated v2.0 specification documents
 
 **Evidence Links:**
 
-- **Commits:** `[Link to your commits]`
-- **Tests:** `[Link to tests you authored]`
-- **Documentation:** `[Link to documentation you wrote]`
+- **Commits:** 7ef36ddcaf0f0b49226cad4e627ddc5d22e1b461, 7a14be75c30cb22080b3a853a8926a9a20b08968, a61a9678ee25f1b65ab8e46e771af1778cdb644a, a29fbbca6475267143f5dfc063ede97253e2f2a4, ef40848f30e0c4c28ec5a3c14a349570cfab9c19,
+  b89062bc103a8c6a2693fbdf9b2021e7c177a200,
+  5f234f42ba4725e6929d283a05d664d7c8177684
+- **Artifacts:** [`AMBIGUITY_LOG.md`](https://github.com/ivbeck/gse-project-impl/blob/main/specifications/AMBIGUITY_LOG.md)
+- **Documentation:** - https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_ambiguity_log_creation_sonnet_chat.json, https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_specifications_v2_sonnet.json
 
 **Key Contributions:**
 
-- `[Contribution 1]`
-- `[Contribution 2]`
-- `[Contribution 3]`
+- Produced AMBIGUITY_LOG.md containing 8 flagged ambiguities with clarifying questions
+- Resolved scoring rule ambiguity (AMB-05) by locking to the standard scheme before any
+  implementation decisions were made
+- Versioned both specifications to v2.0 with embedded rule references from the official
+  Mattel BJV44 rulebook
 
 ---
 
-### Package Name: `[Package Name]` (Optional)
+### Package Name: `Design — Guideline 3: UML Specification`
 
-**Description:**  
-Briefly describe the package you owned and what it does.
+**Description:**
+Applied a structured two-phase LLM workflow to generate and validate a Mermaid class
+diagram for the Blokus game engine core, enforcing hexagonal architecture boundaries
+and traceability to functional requirements. Note: the UML diagramms are based on the previoulsy created ADR.md (Guideline 1) from Dennis Maxheimer
+
+**Responsibilities:**
+
+- Generating a v1 UML class diagram using a persona-based generation prompt
+- Validating the diagram against a five-criterion scoring rubric in a separate LLM session
+- Incorporating corrections to produce a v2 diagram that should score 4 or above across all criteria
 
 **Evidence Links:**
 
-- **Commits:** `[Link to your commits]`
-- **Tests:** `[Link to tests you authored]`
-- **Documentation:** `[Link to documentation you wrote]`
+- **Commits:** 581552d3ba35d77020ffbe72de537233d9aa94b1, e0b95c1797c3c017fda7861c07b1a1125a162c63
+- **Artifacts/Prompts:** https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_prompt_1_uml_class_diagram.md, https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_prompt_2_uml_validator.md, https://github.com/ivbeck/gse-project-impl/blob/main/design/blokus_core_mermaid_uml_class_diagram_v1.html, https://github.com/ivbeck/gse-project-impl/blob/main/design/blokus_core_mermaid_uml_class_diagram_v2.html
+- **Documentation:** https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_uml_validation.json, https://github.com/ivbeck/gse-project-impl/blob/main/design/uml_validation_score.csv
 
-> **Note:** Adjust to your needs (number of work packages your worked on etc.)
+**Key Contributions:**
+
+- Produced v1 and v2 Mermaid class diagrams for the engine core
+- Identified and resolved missing type definitions and absent multiplicities through the
+  validation pass
+- Maintained a clean hexagonal boundary
+
+---
+
+### Package Name: `Review — Guideline 3 and Guideline 4`
+
+**Description:**
+Applied two distinct LLM-assisted code review techniques to the Blokus game engine:
+G3 (stripping bias-inducing comments before review) on rule_set.py, and G4 (persona,
+pseudocode restatement, and chain-of-thought reasoning) on scoring.py.
+
+**Responsibilities:**
+
+- Designing and running the two-phase G3 experiment with and without authority-cue comments
+- Constructing the G4 prompt with persona assignment and mandatory pseudocode restatement
+- Manually verifying all LLM findings against source code to distinguish real bugs from
+  hallucinated ones
+
+**Evidence Links:**
+
+- **Commits:** 10b319c1fc6e84e4798c9fca4e3b13ff07a1846b, 230d59e1f51f22be8e9e8e1332285b43e594959e
+- **Prompts:** https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g3_prompt.md, https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g4_prompt.md
+- **Documentation:** https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g4_scoring_gemini.json, https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g3_ruleset_with_comments_gemini.json, https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g3_ruleset_no_comments_gemini.json
+
+**Key Contributions:**
+
+- Identified a real critical bug in check_legality where is_first_move is an unverified
+  caller-supplied boolean, breaking first-move logic for players 2 through 4
+- Identified a real critical bug in DuoScoring.rank where negating an already-negative
+  score and sorting ascending inverts the leaderboard
+- Documented an overcompensation effect in G3 where authority-cue comments caused the
+  model to hallucinate a critical finding rather than suppress scrutiny
 
 ---
 
@@ -69,9 +120,10 @@ We applied this guideline during the requirements refinement phase for both Mile
 
 **Application Process:**
 
-1. We prompted an LLM with both specification documents and instructed it to act as a requirements reviewer. The LLM was asked to flag every statement that could be interpreted in more than one way, produce a clarifying question for each, and format the output as a structured log. This produced the AMBIGUITY_LOG.md containing 8 flagged items (AMB-01 through AMB-08), each with the original requirement text, the identified ambiguity, and the clarifying question.
+1. We prompted an LLM with both specifications in one document initially (SPEC.md) and instructed it to act as a requirements reviewer. The LLM was asked to flag every statement that could be interpreted in more than one way, produce a clarifying question for each, and format the output as a structured log. This produced the AMBIGUITY_LOG.md containing 8 flagged items (AMB-01 through AMB-08), each with the original requirement text, the identified ambiguity, and the clarifying question.
 2. We reviewed each flagged item as a team and filled in the "Team Answer" field for every entry. For example: AMB-01 (color continuity) was resolved by deciding to follow the official Mattel rulebook (BJV44), making diagonal corner-touch mandatory and orthogonal same-color contact forbidden; AMB-05 (scoring) was resolved by selecting the basic scheme (lowest remaining squares wins, no bonuses); AMB-04 (post-game behavior) was resolved as "announce winner and prompt for replay"; and AMB-03 (Duo corner positions) was resolved by deciding to remove the Blokus Duo board entirely and implement the official Classic two-player variant instead.
-3. We fed the completed ambiguity log back to an LLM together with the Mattel rulebook PDF and instructed it to rewrite both specifications so that each resolved answer was embedded directly into the relevant requirement. Vague phrases were replaced with precise, testable language. For instance, FR-1.4 was expanded into four explicit sub-rules drawn from BJV44; FR-3.4 was rewritten with a concrete three-priority heuristic; NFR-1.1–1.3 gained a Reference Environment definition; and IR-1.1 was updated with a concrete feature-branch workflow. Both documents were versioned to v2.0 with a changelog entry for traceability.
+3. I split Milestone 1 and Milestone 2 into two separate specification files, namely SPEC_M1.md and SPEC_M2.md to clearly separate the scope for the LLM.
+4. We fed the completed ambiguity log back to an LLM together with the Mattel rulebook PDF and instructed it to rewrite both specifications so that each resolved answer was embedded directly into the relevant requirement. Vague phrases were replaced with precise, testable language. For instance, FR-1.4 was expanded into four explicit sub-rules drawn from BJV44; FR-3.4 was rewritten with a concrete three-priority heuristic; NFR-1.1–1.3 gained a Reference Environment definition; and IR-1.1 was updated with a concrete feature-branch workflow. Both documents were versioned to v2.0 with a changelog entry for traceability.
 
 **Outcome:**
 
@@ -166,7 +218,7 @@ Reviewing rule_set.py, the core move validation module of our Blokus game engine
 
 - **What worked:** The stripped version produced a more reliable review. It correctly identified the real critical bug which was is_first_move being an unverified caller-supplied boolean, which means players 2–4 can never legally place their first piece. Secondly, the LLM flagged dead code in is_corner_position that the commented run missed entirely.
 - **What didn't work:** The expected suppression effect (LLM skipping sections marked as correct) did not occur. Instead, the commented run produced an overcompensation effect: the model appeared to overscrutinize the method marked # flawless and generated a hallucinated critical finding on \_touches_corner_diagonally, arguing a placement violation that is already handled by the subsequent \_has_orthogonal_same_color check. Additionally, the commented run missed the dead code issue in is_corner_position entirely which suggests that while comments provoked overscrutiny in one place, they may have drawn attention away from other areas.
-- **Evidence:** Two separate LLM runs recorded in richard_review_g3_ruleset_with_comments.json and richard_review_g3_ruleset_no_comments_gemini.json.
+- **Evidence:** Two separate LLM runs recorded in [richard_review_g3_ruleset_with_comments.json](https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g3_ruleset_with_comments_gemini.json) and [richard_review_g3_ruleset_no_comments_gemini.json.](https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g3_ruleset_no_comments_gemini.json)
 
 **Reflection:**  
 The guideline's core claim holds. Biased input produces unreliable output, but the failure mode was different from what the example problems predicted. Rather than suppressing findings, the authority-cue comments caused the model to hallucinate a blocker to demonstrate it wasn't skipping flagged sections. This is arguably a more dangerous failure than suppression, since a hallucinated critical finding could block a valid pull request or waste significant debugging time. The stripped run was not only more accurate but also more concise. We apply G3 by default to any LLM-assisted review going forward and maintain many commentless python scripts, particularly for code that has been annotated by a senior team member or generated by an AI that adds self-validating comments.
@@ -191,7 +243,7 @@ Reviewing scoring.py, which contains the scoring logic for both the standard and
 
 - **What worked:** The mandatory pseudocode step forced the model to demonstrate comprehension before judging. This directly surfaced the critical sorting bug in DuoScoring.rank, where negating an already-negative score and sorting ascending inverts the leaderboard, placing losers first. The chain-of-thought reasoning made the diagnosis traceable and easy to verify. The piece_square_count assumption about binary shape values was also caught through the reasoning step rather than pattern matching.
 - **What didn't work:** Finding 3 (asymmetric sorting contracts across implementations in build_scoring) is a valid architectural observation but does not constitute a concrete bug. The model classified it as supporting rather than a nit, slightly inflating the severity profile. The persona and CoT prompting did not prevent this borderline classification, suggesting that G4 improves reasoning quality but does not fully eliminate imprecise severity judgement.
-- **Evidence:** richard_review_g4_scoring_gemini.json.
+- **Evidence:** [richard_review_g4_scoring_gemini.json.](https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_review_g4_scoring_gemini.json)
 
 **Reflection:**  
 Guideline 4 produced a higher quality reasoning logic than a standard review prompt most likely would have. The pseudocode restatement in particular is a strong forcing function: a model that cannot correctly restate what a function does in plain language has no business classifying it as correct or broken. The critical finding in DuoScoring.rank is a real bug that would have been easy to miss in a quick read, and the step-by-step reasoning made it immediately verifiable without having to re-read the source code carefully. The main limitation is that guideline 4 adds a substantial prompt overhead and produces longer outputs, which makes it less suitable for quick reviews of simple utility functions. Going forward, this guideline is likely best reserved for algorithmically dense modules where silent logical errors are the primary risk, rather than applied uniformly across an entire codebase.
