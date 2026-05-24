@@ -1,0 +1,92 @@
+{
+  "review_summary": {
+    "tally": {
+      "critical": 1,
+      "supporting": 2,
+      "nit": 1
+    },
+    "role_assumed": "Senior Game Engine Architect",
+    "domain": "Turn-based board game scoring systems"
+  },
+  "pseudocode_restate": {
+    "piece_square_count": {
+      "parameters": ["catalog", "piece_id"],
+      "logic": "Retrieve the piece object from the catalog using piece_id. Sum up all the numerical values inside the 2D grid (shape) of the piece, then return the total count of occupied squares."
+    },
+    "Scoring": {
+      "constructor": "Save the piece catalog reference.",
+      "rank": {
+        "parameters": ["remaining", "last_placed_piece"],
+        "logic": "Initialize an empty scores list. For each player and their unplaced piece_ids, calculate the penalty score (total square counts of remaining pieces), create a PlayerScore (is_winner=False), and add it to the list. Find the minimum score (lowest penalty wins), mark matching players as winners, and return the list sorted ascending."
+      }
+    },
+    "DuoScoring": {
+      "constructor": "Save the piece catalog reference.",
+      "rank": {
+        "parameters": ["remaining", "last_placed_piece"],
+        "logic": "Default last_placed_piece to an empty dict if None. For each player, compute negative remaining squares as their base score. If they cleared all pieces (0 remaining), award a +15 clear bonus. Additionally, check if their last placed piece was a monomino (1 square) and award a +5 bonus. Find the maximum score (highest score wins), mark matching players as winners, and return the list sorted descending."
+      }
+    },
+    "build_scoring": {
+      "parameters": ["config", "catalog"],
+      "logic": "If config.scoring_rule is explicitly the string 'duo', return an instance of DuoScoring. Otherwise, return an instance of standard Scoring as a fallback."
+    }
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "CRITICAL",
+      "method_name": "DuoScoring.rank",
+      "description": "Incorrect sorting key inverting leaderboard ranks",
+      "impact": "The output list presents losers at the front and winners at the back, violating standard engine leaderboard contracts.",
+      "reasoning": [
+        "In DuoScoring.rank, the sorting step executes: return sorted(scores, key=lambda s: -s.score).",
+        "The sorting key negates s.score to attempt a descending sort.",
+        "However, s.score can already be a negative number (e.g., -12 remaining squares).",
+        "Negating a negative integer makes it positive (e.g., 12).",
+        "When sorted() processes these inverted values in default ascending order, the largest positive values (originally the worst negative scores) are placed first.",
+        "A perfect score of +15 or +20 becomes -15 or -20, pushing winners to the very end of the sorted list."
+      ]
+    },
+    {
+      "id": 2,
+      "severity": "SUPPORTING",
+      "method_name": "DuoScoring.rank",
+      "description": "Silent omission of bonus logic due to unforced parameter default values",
+      "impact": "Missing match state parameters cause valid bonuses to fail silently instead of throwing explicit errors.",
+      "reasoning": [
+        "A player is only eligible for the +5 monomino bonus if the monomino was the last piece successfully placed on the board.",
+        "The lookup is written as: last = last_placed_piece.get(player_id).",
+        "The method accepts last_placed_piece as an optional parameter defaulting to None.",
+        "If a client orchestration layer invokes rank() but fails to pass the last_placed_piece tracking state, the method falls back to an empty dictionary.",
+        "Because of this fallback, the get(player_id) lookup silently returns None and skips the +5 monomino bonus entirely without raising an exception, masking upstream integration omissions."
+      ]
+    },
+    {
+      "id": 3,
+      "severity": "SUPPORTING",
+      "method_name": "build_scoring",
+      "description": "Paradigm inversion and asymmetric sorting contracts across implementations",
+      "impact": "Downstream components face high risk of runtime failures due to opposite leaderboard sorting behaviors under a single interface.",
+      "reasoning": [
+        "The factory function build_scoring checks: if config.scoring_rule == 'duo': to instantiate DuoScoring, otherwise falling back to standard Scoring.",
+        "Scoring.rank returns elements sorted from lowest score to highest score (ascending, where 0 is best).",
+        "DuoScoring.rank aims to return elements from highest score to lowest score (descending, where higher numbers are best).",
+        "Because the factory returns objects that look identical interface-wise but emit lists with opposite sorting properties and score scalar directions, any upstream UI must explicitly know which rule is running to parse the winner safely."
+      ]
+    },
+    {
+      "id": 4,
+      "severity": "NIT",
+      "method_name": "piece_square_count",
+      "description": "Fragile sum aggregation over raw shape matrix matrices",
+      "impact": "Relies implicitly on matrix cells evaluating perfectly to numerical values representing cell units.",
+      "reasoning": [
+        "The utility function piece_square_count calculates a piece's mass using: sum(cell for row in piece.shape for cell in row).",
+        "This assumes empty matrix cells are 0 and occupied cells are 1 (or safely sum to the tile count).",
+        "If the catalog shape structures ever contain boolean markers, custom block objects, or variant non-zero ID markers, a basic scalar sum() will produce corrupted calculations.",
+        "A safer type-agnostic cell counter would be: sum(1 for row in piece.shape for cell in row if cell)."
+      ]
+    }
+  ]
+}

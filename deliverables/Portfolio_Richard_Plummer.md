@@ -99,7 +99,7 @@ I applied this guideline while designing the structural foundation for the Bloku
 
 1. Generation (Prompt 1): I initialized the process by acting as a Senior Software Architect, providing the LLM with the full architectural context from the ADR. I mapped specific Functional Requirements (like FR-1.4 for rule enforcement and FR-4.4 for scoring) to specific core classes to ensure every piece of logic had a defined home.
 2. Critique and Scoring (Prompt 2): I then switched roles to a "Strict UML Reviewer." I applied the scoring rubric from Guideline 3, evaluating the initial draft across five dimensions: Completeness, Correctness, Standards Adherence, Comprehensibility, and Terminological Alignment.
-3. Refinement: Based on the critique, I executed a "fix-only" iteration. This involved injecting missing domain entities (like Piece, Position, and PlayerScore) and adding formal UML multiplicities (e.g., 1 to 21 for the Piece Catalog) to transition the diagram from a conceptual sketch to a precise technical specification.
+3. Refinement: Based on the critique, and as per the guideline, the model provides suggested fixes to the UML diagramm which make up the second updated version.
 
 **Outcome:**
 
@@ -173,68 +173,137 @@ The guideline's core claim holds. Biased input produces unreliable output, but t
 
 ---
 
+### Application 4: `Guideline 4: Approaches for Improving Comprehensive Reasoning for Complex Code` from `Review` Team
+
+**Guideline Description:**  
+Structure the review prompt to force the LLM to reason before judging. This involves assigning a domain-specific persona, requiring the model to restate the code as pseudocode before reviewing it, and demanding step-by-step chain-of-thought reasoning for each finding before a severity classification is assigned.
+
+**Context:**  
+Reviewing scoring.py, which contains the scoring logic for both the standard and Duo variants of the Blokus game engine. This file was chosen because it contains subtle algorithmic assumptions in bonus conditions, score calculations, and a factory function that could silently misconfigure the scoring system at runtime. Furthermore, I decided to not apply this guideline to rule_set.py as guideline three has already covered it and most likely would not uncover any new knowledge about the code quality.
+
+**Application Process:**
+
+1. I selected scoring.py as the review target because its scoring logic contains implicit assumptions about shape matrix values, conditional bonus eligibility, and opposite sorting contracts between Scoring and DuoScoring that a surface-level review would likely miss.
+2. I constructed a G4 prompt assigning the persona of a senior game engine architect, mandating a pseudocode restatement of every function and class before any findings were produced, and requiring step-by-step reasoning before each severity classification.
+3. Aftewards, I ran the prompt in a fresh LLM session with Gemini Flash with the full contents of scoring.py appended, then evaluated each finding against the actual source code to determine whether the reasoning chain produced real findings or speculative ones.
+
+**Outcome:**
+
+- **What worked:** The mandatory pseudocode step forced the model to demonstrate comprehension before judging. This directly surfaced the critical sorting bug in DuoScoring.rank, where negating an already-negative score and sorting ascending inverts the leaderboard, placing losers first. The chain-of-thought reasoning made the diagnosis traceable and easy to verify. The piece_square_count assumption about binary shape values was also caught through the reasoning step rather than pattern matching.
+- **What didn't work:** Finding 3 (asymmetric sorting contracts across implementations in build_scoring) is a valid architectural observation but does not constitute a concrete bug. The model classified it as supporting rather than a nit, slightly inflating the severity profile. The persona and CoT prompting did not prevent this borderline classification, suggesting that G4 improves reasoning quality but does not fully eliminate imprecise severity judgement.
+- **Evidence:** richard_review_g4_scoring_gemini.json.
+
+**Reflection:**  
+Guideline 4 produced a higher quality reasoning logic than a standard review prompt most likely would have. The pseudocode restatement in particular is a strong forcing function: a model that cannot correctly restate what a function does in plain language has no business classifying it as correct or broken. The critical finding in DuoScoring.rank is a real bug that would have been easy to miss in a quick read, and the step-by-step reasoning made it immediately verifiable without having to re-read the source code carefully. The main limitation is that guideline 4 adds a substantial prompt overhead and produces longer outputs, which makes it less suitable for quick reviews of simple utility functions. Going forward, this guideline is likely best reserved for algorithmically dense modules where silent logical errors are the primary risk, rather than applied uniformly across an entire codebase.
+
+---
+
 ## 3. Counterexamples
 
 > **Note:** Document at least 3 reproducible counterexamples where guidelines failed or produced suboptimal results. For each, include the failure, diagnosis, and refinement.
 
-### Counterexample 1: `[Title]`
+### Counterexample 1: `Cross-Document Scope Leakage Caused a False Positive Ambiguity Flag`
 
 **Failure Description:**  
-Describe the failure or suboptimal result. What guideline was applied? What was the expected outcome? What actually happened?
+Guideline 3 (Proactively Detect and Resolve Ambiguity Through Clarification) was applied to the Blokus requirements specification by prompting Sonnet 4.6 to scan SPEC.md and flag ambiguous statements. The expected outcome was that all flagged items would represent genuine ambiguities within the document. Instead, the model flagged FR-4.3 ("The engine shall enforce first-move corner placement constraints for each color") as ambiguous, arguing that "corner placement" differs between Classic and Duo mode. This was a false positive: SPEC_M1 exclusively covers the Classic 4-player game, making the statement unambiguous within its own scope.
 
 **Diagnosis:**
 
-- **Root Cause:** `[Description]`
-- **Why the Guideline Failed:** `[Description]`
-- **Boundary Condition:** `[Description of when the guideline fails]`
+- **Root Cause:** At the time of the scan, both milestone specifications (SPEC_M1 and SPEC_M2) existed within a single combined file. The model reasoned across both documents simultaneously, treating Duo mode constraints defined in SPEC_M2 as relevant context for evaluating SPEC_M1 requirements.
+- **Why the Guideline Failed:** The guideline does not specify that each document should be scanned in isolation. Feeding a multi-scope document to the model without constraining its reasoning to a single scope gave it grounds to generate cross-document comparisons that were not meaningful within either document alone.
+- **Boundary Condition:** The guideline produces false positives when the input document contains requirements from multiple scopes or milestones, or when related documents are provided together without explicit scope boundaries in the prompt.
 
 **Refinement:**
 
-- **Updated Guideline:** `[Description of the refined guideline]`
-- **How It Was Tested (evaluated):** `[Description of testing]`
-- **Evidence:** `[Link to code, tests, or documentation]`
+- **Updated Guideline:** Constrain the LLM to a single document's scope per scan by adding an explicit instruction such as "Only flag ambiguities that are unresolvable within this document alone. Do not flag statements that are clear within this document's defined scope, even if related documents use different conventions." Additionally, split multi-milestone specifications into separate files before scanning.
+- **How It Was Tested (evaluated):** After splitting SPEC_M1 and SPEC_M2 into separate files, the ambiguity scan was re-run on each document individually. FR-4.3 was no longer flagged, confirming that the false positive was caused by cross-document scope leakage rather than genuine ambiguity in the requirement itself.
+- **Evidence:** richard_ambiguity_log_creation_sonnet_chat.json, richard_specifications_v2_sonnet.json
 
 **Prompt/Context Used:**
 
 ```
-[Paste the prompt or context you used with the AI tool]
+Guideline 3: Proactively Detect and Resolve Ambiguity Through Clarification
+
+[uploaded SPEC.md containing both SPEC_M1 and SPEC_M2]
+
+Scan the requirements file and flag every statement that could be
+interpreted in more than one way. Produce a clarifying question for
+each and format the output as a structured ambiguity log.
 ```
 
 **AI Output:**
 
 ```
-[Paste the AI output that failed or was suboptimal]
+AMB-03 — FR-4.3: What 'corner placement' means in Duo mode
+
+Original text: "The engine shall enforce first-move corner placement
+constraints for each color."
+
+Ambiguity: The term 'corner placement' differs between Classic and Duo
+mode. In Classic, each of the four colors starts from one of the four
+board corners. In Duo mode, starting positions are not the literal board
+corners. It is unclear which convention applies here.
+
+Clarifying question: Does 'corner placement' refer strictly to the four
+physical corners of the 20x20 board, or to the designated starting
+positions for each variant?
 ```
 
 ---
 
-### Counterexample 2: `[Title]`
+### Counterexample 2: `Single-Shot Generation Omitted Multiplicities and Undefined Referenced Types`
 
 **Failure Description:**  
-Describe the failure or suboptimal result.
+The UML Specification guideline (Guideline 3 of the design team) was applied to generate a Mermaid class diagram for the Blokus game engine core. The prompt followed the guideline's Stage 2 decomposition principle by starting with a maximum of 8 core elements (as per guideline 3) and providing explicit constraints on notation, visibility markers, and relationship types. The expected outcome was a diagram scoring 4 or above across all five criteria. What actually happened was that the generated diagram scored 2 on Correctness and 3 on Completeness: multiplicities were entirely absent from all associations, and referenced types Piece, Position, and PlayerScore were used in method signatures and relationships without being defined as diagram elements.
 
 **Diagnosis:**
 
-- **Root Cause:** `[Description]`
-- **Why the Guideline Failed:** `[Description]`
-- **Boundary Condition:** `[Description of when the guideline fails]`
+- **Root Cause:** The generation prompt focused heavily on enforcing architectural constraints (no Core-to-Adapter dependencies, named state transitions, enumerations) but did not explicitly require multiplicities on every association. The model satisfied the stated constraints and ignored everything else, including structural completeness of referenced types.
+- **Why the Guideline Failed:** Stage 2 of the guideline instructs to "assign associations with multiplicities" but does not mandate that every referenced type must appear as a defined class or interface. The model interpreted the 8-element cap as permission to omit supporting domain types rather than as a starting point to expand from.
+- **Boundary Condition:** The guideline's decomposition principle (start small, expand iteratively) creates a tension with completeness requirements. When the model is capped at 8 elements but the prompt references more types implicitly through method signatures, it will produce a diagram that is syntactically valid but semantically incomplete.
 
 **Refinement:**
 
-- **Updated Guideline:** `[Description of the refined guideline]`
-- **How It Was Tested (evaluated):** `[Description of testing]`
-- **Evidence:** `[Link to code, tests, or documentation]`
+- **Updated Guideline:** Add an explicit rule to Stage 2: "Every type referenced in a method signature or association must be defined as a diagram element, even if it is a simple value object. If the element cap would be exceeded, promote the missing type to the next iteration explicitly." Additionally, add a constraint to the generation prompt: "For every association arrow, you must specify a multiplicity on both ends."
+- **How It Was Tested (evaluated):** The validation prompt (Prompt 2) was run in a fresh session against the v1 diagram. The scoring table produced a Correctness score of 2 and Completeness score of 3, which triggered the corrected v2 diagram output per the validator's output instructions. The v2 diagram was then checked manually to confirm multiplicities and missing types were added.
+- **Evidence:** richard_prompt_1_uml_class_diagram.md, richard_prompt_2_uml_validator.md, richard_uml_validation.json
 
 **Prompt/Context Used:**
 
 ```
-[Paste the prompt or context you used with the AI tool]
+You are a senior software architect.
+
+Think step-by-step:
+(a) Extract entities and roles from the requirements and architecture context above.
+(b) Define attributes with concrete types and visibility markers (+, -, #).
+(c) Decide inheritance and interfaces — ports are interfaces; adapters implement them.
+(d) Assign associations with multiplicities and direction labels.
+(e) Sanity-check the Mermaid syntax before outputting.
+
+Then output ONLY valid Mermaid class diagram code. No prose, no explanation
+outside the code block.
+
+Constraints:
+- Start with a maximum of 8 core elements (Core layer only) in this first pass.
+- Use concrete types only — no <Type> placeholders.
+- For every class or interface, add an inline Mermaid note referencing the
+  Requirement ID it satisfies.
+- For every method, add an inline comment with the Use Case ID and a short
+  action description.
 ```
 
 **AI Output:**
 
 ```
-[Paste the AI output that failed or was suboptimal]
+## UML Review & Scoring
+
+| #   | Criterion                    | Score | Justification                                                  |
+| :-- | :--------------------------- | :---- | :------------------------------------------------------------- |
+| 1   | Completeness                 | 3     | Referenced types like Piece and Position are not defined.      |
+| 2   | Correctness                  | 2     | Multiplicities are missing; relationship types are vague.      |
+| 3   | Standards Adherence          | 4     | Valid Mermaid syntax used.                                     |
+| 4   | Comprehensibility            | 5     | Clear layout and labeling.                                     |
+| 5   | Terminological Alignment     | 5     | Aligns with ADR terminology.                                   |
 ```
 
 ---
@@ -316,30 +385,52 @@ Phase 2:
 
 ### Tools and Models Used
 
-| Tool/Model                  | Usage                                  | Validation Method                 |
-| --------------------------- | -------------------------------------- | --------------------------------- |
-| `[e.g., GitHub Copilot]`    | `[e.g., Code generation, suggestions]` | `[e.g., Unit tests, peer review]` |
-| `[e.g., GPT-4]`             | `[e.g., Requirements, documentation]`  | `[e.g., Manual verification]`     |
-| `[e.g., Claude 3.5 Sonnet]` | `[e.g., Test generation]`              | `[e.g., Test execution]`          |
+| Tool/Model          | Usage                                                                                                                    | Validation Method                                                                                |
+| :------------------ | :----------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
+| `Claude Sonnet 4.6` | Ambiguity detection and log generation for requirements specification (Guideline 3 — Requirements)                       | Manual team review of each flagged ambiguity against the specification                           |
+| `Claude Sonnet 4.6` | Prompt construction for G3 and G4 review guidelines                                                                      | Manual verification that prompts matched guideline intent before use                             |
+| `Gemini 3 Flash`    | UML class diagram generation from architectural context (Guideline 3 — Design)                                           | LLM-as-Judge validation pass using a separate fresh session with a structured scoring rubric     |
+| `Gemini 3 Flash`    | UML diagram validation and scoring against rubric (Guideline 3 — Design)                                                 | Human architect review of v2 diagram against ADR and functional requirements                     |
+| `Gemini 3 Flash`    | Code review of `rule_set.py` with and without authority-cue comments (Guideline 3 — Review)                              | Manual cross-comparison of Phase 1 and Phase 2 outputs; findings verified against source code    |
+| `Gemini 3 Flash`    | Code review of `scoring.py` using persona, pseudocode restatement, and chain-of-thought prompting (Guideline 4 — Review) | Each finding traced back to source code manually to distinguish real bugs from hallucinated ones |
 
 ### Evaluation Methods
 
-Describe how you evaluated AI-generated outputs (below are examples for your guidance):
+1. **Correctness Verification:** All LLM findings from code reviews were manually verified
+   against the actual source files. For each flagged issue, the relevant method was re-read
+   to confirm whether the described behavior was real or hallucinated. For example, the
+   critical finding on `_touches_corner_diagonally` in the guideline 3 review was diagnosed as a
+   false positive by confirming that `_has_orthogonal_same_color` already handles the
+   claimed edge case.
 
-1. **Correctness Testing:** `[Description]`
-2. **Code Review:** `[Description]`
-3. **Unit Tests:** `[Description]`
-4. **Integration Tests:** `[Description]`
-5. **Performance Testing:** `[Description]` (if applicable)
+2. **Output Comparison:** The two-phase guideline 3 review (with and without comments) served as
+   a structured comparison process. Outputs were compared side by side to identify bias
+   effects and assess finding quality across both runs.
+
+3. **Source Tracing:** The critical bug identified in `check_legality` (`is_first_move`
+   being an unverified caller-supplied boolean) was confirmed by manually tracing the call
+   chain to verify that no internal validation exists within `RuleSet` itself.
+
+4. **Manual Simulation:** The sorting bug identified in `DuoScoring.rank` by the G4
+   review was verified by manually tracing the score calculation for a player with remaining
+   squares, confirming that negating an already-negative score and sorting ascending would
+   invert the leaderboard.
+
+5. **Diagram Validation:** UML diagrams were evaluated in two passes. First, the v1
+   diagram was rendered in the Mermaid Live Editor to confirm syntactic correctness. Second,
+   a structured LLM-as-Judge session scored the diagram against a five-criterion rubric
+   covering completeness, correctness, standards adherence, comprehensibility, and
+   terminological alignment. Any criterion scoring below 4 triggered a corrected v2 output,
+   which was then reviewed manually against the ADR and functional requirements.
 
 ### Time Investment
 
 Approximately how much time did you spend on:
 
-- AI prompting and refinement: `[X] hours`
-- Reviewing AI outputs: `[X] hours`
-- Testing and validation: `[X] hours`
-- Documentation: `[X] hours`
+- AI prompting and refinement: 3
+- Reviewing AI outputs: 7.5
+- Testing and validation: 6
+- Documentation: 8
 
 ---
 
@@ -349,23 +440,43 @@ Approximately how much time did you spend on:
 
 ### What You Learned
 
-- `[Lesson 1]`
-- `[Lesson 2]`
-- `[Lesson 3]`
+- Structured prompting techniques like personas, pseudocode restatement, and
+  chain-of-thought reasoning (Guideline 4) produce more traceable and verifiable outputs than
+  classic review prompts. When the model is forced to explain its reasoning before
+  classifying a finding, hallucinated critiques become easier to identify and discard.
+- Feeding multiple documents or scopes into a single LLM session without specific
+  boundary constraints can causes the model to lose focus. The false positive in the ambiguity
+  detection exercise (AMB-03) would have been avoided entirely by scoping the prompt to
+  one document at a time.
+- The LLM-as-Judge pattern is effective for diagram validation but requires a tightly
+  constrained prompt. Without explicit instructions to avoid redesigning the class
+  hierarchy, the validator tends to overstep its role and suggest structural changes
+  rather than just fixing errors.
 
 ### Skills Developed
 
-- `[Skill 1]`
-- `[Skill 2]`
-- `[Skill 3]`
+- Critical evaluation of LLM outputs, specifically distinguishing between real findings
+  and hallucinated ones by tracing claims back to source code or specification documents.
+- Structured documentation of AI-assisted workflows, including how to record prompts,
+  outputs, and validation steps in a reproducible format. For this project, we mainly used JSON as the go-to standard.
+- Applying a two-phase review process (generate then validate in separate sessions) to
+  reduce hallucinations and improve output reliability across different guideline
+  applications.
 
 ### Future Improvements
 
 If you could do this project again, what would you do differently?
 
-- `[Improvement 1]`
-- `[Improvement 2]`
-- `[Improvement 3]`
+- Re-validate corrected outputs such as the v2 UML diagram with a second scoring pass
+  to confirm that fixes did not introduce new issues, even if Guideline 3 of the Design
+  team does not explicitly require it.
+- Apply Guideline 4 of the Review team's prompting techniques to the UML generation step
+  as well, by requiring the model to restate the architectural constraints in plain
+  language before generating diagram code. This would likely catch missing type
+  definitions earlier than the separate validation pass did.
+- Run Guideline 3 and Guideline 4 of the Review team on the same
+  file in separate sessions to produce a direct comparison of what each technique
+  surfaces, which would strengthen the argument for when to use each guideline.
 
 ---
 
