@@ -15,39 +15,7 @@
 
 ## 1. Owned Package Contributions
 
-### Package Name: `Requirements Guideline 3: Proactively Detect and Resolve Ambiguity Through Clarification`
-
-**Description:**
-Applied an LLM-assisted ambiguity detection workflow to the Blokus requirements
-specification. Flagged underspecified requirements, resolved them as a team, and
-embedded the answers back into versioned specification documents.
-
-**Responsibilities:**
-
-- Prompting an LLM to scan the initially created SPEC.md for ambiguous natural language statements
-- Coordinating a team review (an in-person meeting) of the generated ambiguity log and filling in resolution answers
-- Based on the ambiguity log and potential hallucinations, I separate the SPEC.md file into SPEC_M1.md and SPEC_M2.md
-- Feeding resolved answers back to an LLM to produce updated v2.0 specification documents
-
-**Evidence Links:**
-
-- **Commits:** 7ef36ddcaf0f0b49226cad4e627ddc5d22e1b461, 7a14be75c30cb22080b3a853a8926a9a20b08968, a61a9678ee25f1b65ab8e46e771af1778cdb644a, a29fbbca6475267143f5dfc063ede97253e2f2a4, ef40848f30e0c4c28ec5a3c14a349570cfab9c19,
-  b89062bc103a8c6a2693fbdf9b2021e7c177a200,
-  5f234f42ba4725e6929d283a05d664d7c8177684
-- **Artifacts:** [`AMBIGUITY_LOG.md`](https://github.com/ivbeck/gse-project-impl/blob/main/specifications/AMBIGUITY_LOG.md)
-- **Documentation:** - https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_ambiguity_log_creation_sonnet_chat.json, https://github.com/ivbeck/gse-project-impl/blob/main/prompts/richard_specifications_v2_sonnet.json
-
-**Key Contributions:**
-
-- Produced AMBIGUITY_LOG.md containing 8 flagged ambiguities with clarifying questions
-- Resolved scoring rule ambiguity (AMB-05) by locking to the standard scheme before any
-  implementation decisions were made
-- Versioned both specifications to v2.0 with embedded rule references from the official
-  Mattel BJV44 rulebook
-
----
-
-### Package Name: `Design — Guideline 3: UML Specification`
+### Package Name: `Design/Architecture Guideline 3: UML Specification (Co-owned with Denis Maxheimer)`
 
 **Description:**
 Applied a structured two-phase LLM workflow to generate and validate a Mermaid class
@@ -75,7 +43,7 @@ and traceability to functional requirements. Note: the UML diagramms are based o
 
 ---
 
-### Package Name: `Review — Guideline 3 and Guideline 4`
+### Package Name: `Review Package: Guideline 3 and Guideline 4`
 
 **Description:**
 Applied two distinct LLM-assisted code review techniques to the Blokus game engine:
