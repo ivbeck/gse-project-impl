@@ -21,7 +21,7 @@ class SimpleAiPlayer(PlayerInput):
                 m.col,
                 m.piece_id,
                 m.orientation_index,
-            )
+            ),
         )
         return ranked_moves[0]
 
@@ -33,7 +33,9 @@ class SimpleAiPlayer(PlayerInput):
     def _future_corner_points(self, player_id: int, move: Move) -> int:
         if self.catalog is None or self.board is None:
             return 0
-        orientation = self.catalog.get_orientations(move.piece_id)[move.orientation_index]
+        orientation = self.catalog.get_orientations(move.piece_id)[
+            move.orientation_index
+        ]
         placed_cells = {(move.row + dr, move.col + dc) for dr, dc in orientation}
         corner_points: set[tuple[int, int]] = set()
         for row, col in placed_cells:

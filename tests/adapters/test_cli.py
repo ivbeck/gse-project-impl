@@ -54,7 +54,7 @@ def test_cli_render_status(capsys):
 
 def test_cli_prompt_replay(monkeypatch):
     cli = CLI()
-    monkeypatch.setattr('builtins.input', lambda _: 'n')
+    monkeypatch.setattr("builtins.input", lambda _: "n")
     result = cli.prompt_replay()
     assert result is False
 
@@ -62,15 +62,17 @@ def test_cli_prompt_replay(monkeypatch):
 @pytest.mark.parametrize("human_players", [1, 2, 3, 4])
 def test_cli_prompt_human_player_count_accepts_valid_values(monkeypatch, human_players):
     cli = CLI()
-    monkeypatch.setattr('builtins.input', lambda _: str(human_players))
+    monkeypatch.setattr("builtins.input", lambda _: str(human_players))
 
     assert cli.prompt_human_player_count(4) == human_players
 
 
-def test_cli_prompt_human_player_count_rejects_invalid_values_and_retries(monkeypatch, capsys):
+def test_cli_prompt_human_player_count_rejects_invalid_values_and_retries(
+    monkeypatch, capsys
+):
     cli = CLI()
-    responses = iter(['0', '5', 'text', '', '3'])
-    monkeypatch.setattr('builtins.input', lambda _: next(responses))
+    responses = iter(["0", "5", "text", "", "3"])
+    monkeypatch.setattr("builtins.input", lambda _: next(responses))
 
     assert cli.prompt_human_player_count(4) == 3
     output = capsys.readouterr().out
@@ -80,8 +82,8 @@ def test_cli_prompt_human_player_count_rejects_invalid_values_and_retries(monkey
 
 def test_cli_prompt_human_player_count_respects_max_players(monkeypatch, capsys):
     cli = CLI()
-    responses = iter(['3', '2'])
-    monkeypatch.setattr('builtins.input', lambda _: next(responses))
+    responses = iter(["3", "2"])
+    monkeypatch.setattr("builtins.input", lambda _: next(responses))
 
     assert cli.prompt_human_player_count(2) == 2
     assert "Please enter a value between 1 and 2." in capsys.readouterr().out

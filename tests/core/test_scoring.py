@@ -12,7 +12,12 @@ def catalog():
 
 def test_scoring_all_remaining_pieces(catalog):
     scoring = Scoring(catalog)
-    remaining = {0: list(range(21)), 1: list(range(21)), 2: list(range(21)), 3: list(range(21))}
+    remaining = {
+        0: list(range(21)),
+        1: list(range(21)),
+        2: list(range(21)),
+        3: list(range(21)),
+    }
     scores = scoring.rank(remaining)
     assert len(scores) == 4
     assert all(s.score == 89 for s in scores)
@@ -91,9 +96,19 @@ def test_duo_and_classic_produce_identical_scores(catalog):
 
 
 def test_build_scoring_selects_strategy_by_config(catalog):
-    classic = ConfigVO(board_width=20, board_height=20, player_count=4,
-                       starting_positions={0: Position(0, 0)}, scoring_rule="classic")
-    duo = ConfigVO(board_width=14, board_height=14, player_count=2,
-                   starting_positions={0: Position(4, 4)}, scoring_rule="duo")
+    classic = ConfigVO(
+        board_width=20,
+        board_height=20,
+        player_count=4,
+        starting_positions={0: Position(0, 0)},
+        scoring_rule="classic",
+    )
+    duo = ConfigVO(
+        board_width=14,
+        board_height=14,
+        player_count=2,
+        starting_positions={0: Position(4, 4)},
+        scoring_rule="duo",
+    )
     assert isinstance(build_scoring(classic, catalog), Scoring)
     assert isinstance(build_scoring(duo, catalog), DuoScoring)

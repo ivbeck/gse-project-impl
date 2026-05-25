@@ -67,8 +67,13 @@ def test_hover_anchor_is_kept_even_before_piece_selection():
     gui = _read(GUI_JS)
 
     render_start = gui.index("function renderHoverPreview(anchorRow, anchorCol)")
-    anchor_assignment = gui.index("hoverAnchor = { row: anchorRow, col: anchorCol }", render_start)
-    selection_guard = gui.index("if (selectedPiece === null || selectedPiece === undefined) return", render_start)
+    anchor_assignment = gui.index(
+        "hoverAnchor = { row: anchorRow, col: anchorCol }", render_start
+    )
+    selection_guard = gui.index(
+        "if (selectedPiece === null || selectedPiece === undefined) return",
+        render_start,
+    )
     assert anchor_assignment < selection_guard
 
 

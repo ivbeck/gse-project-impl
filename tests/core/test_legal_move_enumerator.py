@@ -18,7 +18,7 @@ def config():
             1: Position(0, 19),
             2: Position(19, 19),
             3: Position(19, 0),
-        }
+        },
     )
 
 
@@ -41,8 +41,12 @@ def test_enumerator_returns_moves_in_sorted_order(session, enumerator):
         for i in range(len(moves) - 1):
             curr = moves[i]
             next_ = moves[i + 1]
-            assert (curr.row, curr.col, curr.piece_id, curr.orientation_index) <= \
-                   (next_.row, next_.col, next_.piece_id, next_.orientation_index)
+            assert (curr.row, curr.col, curr.piece_id, curr.orientation_index) <= (
+                next_.row,
+                next_.col,
+                next_.piece_id,
+                next_.orientation_index,
+            )
 
 
 def test_enumerator_finds_first_move_corner(session, enumerator):

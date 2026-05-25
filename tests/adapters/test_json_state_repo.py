@@ -20,7 +20,7 @@ def config():
             1: Position(0, 19),
             2: Position(19, 19),
             3: Position(19, 0),
-        }
+        },
     )
 
 
@@ -76,9 +76,14 @@ def test_json_state_repo_round_trips_scoring_rule_and_last_placed_piece():
     from core.memento import Memento
     from core.types import ConfigVO, Position
     from adapters.json_state_repo import JsonStateRepo
-    config = ConfigVO(board_width=14, board_height=14, player_count=2,
-                      starting_positions={0: Position(4, 4), 1: Position(9, 9)},
-                      scoring_rule="duo")
+
+    config = ConfigVO(
+        board_width=14,
+        board_height=14,
+        player_count=2,
+        starting_positions={0: Position(4, 4), 1: Position(9, 9)},
+        scoring_rule="duo",
+    )
     memento = Memento(
         config=config,
         board_state=tuple(tuple(None for _ in range(14)) for _ in range(14)),
@@ -97,15 +102,22 @@ def test_json_state_repo_round_trips_scoring_rule_and_last_placed_piece():
 def test_json_state_repo_restore_is_backward_compatible():
     import json
     from adapters.json_state_repo import JsonStateRepo
-    legacy = json.dumps({
-        "config": {"board_width": 20, "board_height": 20, "player_count": 1,
-                   "starting_positions": {"0": {"row": 0, "col": 0}}},
-        "board_state": [[None for _ in range(20)] for _ in range(20)],
-        "current_player_id": 0,
-        "remaining_pieces": [[0, [0, 1]]],
-        "consecutive_passes": 0,
-        "is_first_move": [[0, True]],
-    })
+
+    legacy = json.dumps(
+        {
+            "config": {
+                "board_width": 20,
+                "board_height": 20,
+                "player_count": 1,
+                "starting_positions": {"0": {"row": 0, "col": 0}},
+            },
+            "board_state": [[None for _ in range(20)] for _ in range(20)],
+            "current_player_id": 0,
+            "remaining_pieces": [[0, [0, 1]]],
+            "consecutive_passes": 0,
+            "is_first_move": [[0, True]],
+        }
+    )
     memento = JsonStateRepo().restore(legacy)
     assert memento.config.scoring_rule == "classic"
     assert memento.last_placed_piece == ()

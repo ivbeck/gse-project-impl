@@ -8,7 +8,9 @@ class HumanPlayer(PlayerInput):
             return None
         print(f"Player {player_id}, choose a move:")
         for i, m in enumerate(legal_moves[:10]):
-            print(f"  {i}: piece={m.piece_id} orient={m.orientation_index} row={m.row} col={m.col}")
+            print(
+                f"  {i}: piece={m.piece_id} orient={m.orientation_index} row={m.row} col={m.col}"
+            )
         if len(legal_moves) > 10:
             print(f"  ... and {len(legal_moves) - 10} more moves")
         while True:

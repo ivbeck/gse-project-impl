@@ -14,7 +14,7 @@ class LegalMoveEnumerator:
         board: Board,
         player_id: int,
         remaining_piece_ids: list[int],
-        is_first_move: bool = False
+        is_first_move: bool = False,
     ) -> list[Move]:
         legal_moves = []
         for piece_id in sorted(remaining_piece_ids):
@@ -29,14 +29,12 @@ class LegalMoveEnumerator:
                             piece_id=piece_id,
                             orientation_index=orient_idx,
                             row=row,
-                            col=col
+                            col=col,
                         )
                         result = self.ruleset.check_legality(
                             board, move, is_first_move, orientation
                         )
                         if result == MoveResult.LEGAL:
                             legal_moves.append(move)
-        legal_moves.sort(key=lambda m: (
-            m.row, m.col, m.piece_id, m.orientation_index
-        ))
+        legal_moves.sort(key=lambda m: (m.row, m.col, m.piece_id, m.orientation_index))
         return legal_moves

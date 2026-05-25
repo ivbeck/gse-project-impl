@@ -1,4 +1,5 @@
 """Procedural wiring for Blokus game engine (≤200 lines)."""
+
 from core.types import ConfigVO, MoveResult, GameStatus
 from core.piece_catalog import PieceCatalog
 from core.rule_set import RuleSet
@@ -19,7 +20,9 @@ def create_game(config: ConfigVO) -> GameSession:
     return GameSession(config, catalog, ruleset, scoring)
 
 
-def create_player_inputs(session: GameSession, human_player_count: int) -> dict[int, PlayerInput]:
+def create_player_inputs(
+    session: GameSession, human_player_count: int
+) -> dict[int, PlayerInput]:
     if not 1 <= human_player_count <= session.config.player_count:
         raise ValueError("human_player_count must match the configured player range")
     human_player = HumanPlayer()
@@ -70,7 +73,9 @@ def run_loop(session: GameSession, player_inputs: dict[int, PlayerInput], cli: C
     cli.render_status(GameStatus.FINISHED)
     scores = session.final_scores()
     for s in scores:
-        print(f"Player {s.player_id}: {s.score} points {'(WINNER)' if s.is_winner else ''}")
+        print(
+            f"Player {s.player_id}: {s.score} points {'(WINNER)' if s.is_winner else ''}"
+        )
     return cli.prompt_replay()
 
 

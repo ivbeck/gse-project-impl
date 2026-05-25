@@ -33,7 +33,8 @@ def test_duo_ai_vs_ai_game_finishes_with_consistent_ranking():
         safety += 1
         pid = session.current_player_id
         legal = enumerator.find_moves(
-            session.board, pid,
+            session.board,
+            pid,
             session.remaining_pieces[pid],
             session.is_first_move(pid),
         )
