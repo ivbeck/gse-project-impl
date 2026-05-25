@@ -99,6 +99,19 @@ If you still have issues, share the terminal output (copy the last ~100 lines) a
 - Feature branch per feature. Merge to `main` via Pull Request; delete feature branch after merge.
 - Follow the project's Architectural invariants in [AGENTS.md](AGENTS.md) and design documents in the `design/` folder.
 
+## CI checks (push)
+
+The GitHub Actions workflow runs on every push and enforces the same quality gates used locally.
+
+Run these commands before pushing:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy src tests
+uv run pytest
+```
+
 ## Architecture & resources
 
 - Design & architecture decisions: [design/ADR.md](design/ADR.md)

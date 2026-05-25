@@ -1,6 +1,4 @@
-import pytest
 from adapters.json_config_source import JsonConfigSource
-from core.types import ConfigVO
 
 def test_json_config_source_loads_default():
     source = JsonConfigSource("{}")

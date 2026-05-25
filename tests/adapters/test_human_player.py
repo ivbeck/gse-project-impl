@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from adapters.human_player import HumanPlayer
 from core.types import Move

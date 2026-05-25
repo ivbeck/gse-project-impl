@@ -1,4 +1,3 @@
-import pytest
 from adapters.web_presentation_adapter import WebPresentationAdapter
 from core.types import GameStatus
 

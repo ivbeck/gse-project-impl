@@ -1,5 +1,3 @@
-import pytest
-from typing import Protocol, runtime_checkable
 from core.ports import (
     ConfigSource,
     GameSession,

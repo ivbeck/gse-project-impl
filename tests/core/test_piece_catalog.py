@@ -1,4 +1,3 @@
-import pytest
 from core.piece_catalog import PieceCatalog
 
 

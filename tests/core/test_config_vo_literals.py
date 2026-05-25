@@ -1,6 +1,7 @@
 def test_no_hardcoded_board_size_20():
     """Tripwire: fails if literal 20 appears in Core.* except PieceCatalog."""
-    import pathlib, re
+    import pathlib
+    import re
     core_path = pathlib.Path("src/core")
     for f in core_path.rglob("*.py"):
         if f.name == "piece_catalog.py":
@@ -13,7 +14,8 @@ def test_no_hardcoded_board_size_20():
 
 def test_no_hardcoded_player_count_4():
     """Tripwire: fails if literal 4 appears in Core.* except PieceCatalog."""
-    import pathlib, re
+    import pathlib
+    import re
     core_path = pathlib.Path("src/core")
     for f in core_path.rglob("*.py"):
         if f.name == "piece_catalog.py":

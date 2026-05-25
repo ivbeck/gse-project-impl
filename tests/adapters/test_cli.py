@@ -56,7 +56,7 @@ def test_cli_prompt_replay(monkeypatch):
     cli = CLI()
     monkeypatch.setattr('builtins.input', lambda _: 'n')
     result = cli.prompt_replay()
-    assert result == False
+    assert result is False
 
 
 @pytest.mark.parametrize("human_players", [1, 2, 3, 4])
