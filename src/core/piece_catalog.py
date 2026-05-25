@@ -77,7 +77,9 @@ class PieceCatalog:
         self._orientations = []
         for piece_id, grid_strs in enumerate(_PIECE_DEFINITIONS):
             grid = [[1 if c == "1" else 0 for c in row] for row in grid_strs]
-            self._pieces.append(Piece(piece_id=piece_id, shape=tuple(tuple(row) for row in grid)))
+            self._pieces.append(
+                Piece(piece_id=piece_id, shape=tuple(tuple(row) for row in grid))
+            )
             self._orientations.append(_generate_orientations(grid))
 
     def get_all_pieces(self) -> list[Piece]:

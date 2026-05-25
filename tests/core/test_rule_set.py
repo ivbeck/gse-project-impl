@@ -16,7 +16,7 @@ def config():
             1: Position(0, 19),
             2: Position(19, 19),
             3: Position(19, 0),
-        }
+        },
     )
 
 

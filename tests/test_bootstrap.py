@@ -32,6 +32,7 @@ class _FixedEnumerator:
 
 def test_bootstrap_under_200_lines():
     import pathlib
+
     bootstrap = pathlib.Path("src/bootstrap.py")
     if bootstrap.exists():
         lines = len(bootstrap.read_text().splitlines())
@@ -54,11 +55,15 @@ def test_create_player_inputs_maps_four_humans():
 
     player_inputs = create_player_inputs(session, 4)
 
-    assert all(isinstance(player_inputs[player_id], HumanPlayer) for player_id in range(4))
+    assert all(
+        isinstance(player_inputs[player_id], HumanPlayer) for player_id in range(4)
+    )
 
 
 @pytest.mark.parametrize("human_player_count", [0, 5])
-def test_create_player_inputs_rejects_counts_outside_configured_range(human_player_count):
+def test_create_player_inputs_rejects_counts_outside_configured_range(
+    human_player_count,
+):
     session = create_game(_config())
 
     with pytest.raises(ValueError):
@@ -100,6 +105,7 @@ def test_create_game_uses_duo_scoring_for_duo_config():
     from bootstrap import create_game
     from adapters.json_config_source import JsonConfigSource, DUO_CONFIG_JSON
     from core.scoring import DuoScoring
+
     config = JsonConfigSource(DUO_CONFIG_JSON).load_config()
     session = create_game(config)
     assert isinstance(session.scoring, DuoScoring)
@@ -110,5 +116,6 @@ def test_create_game_uses_classic_scoring_by_default():
     from bootstrap import create_game
     from adapters.json_config_source import JsonConfigSource
     from core.scoring import Scoring
+
     session = create_game(JsonConfigSource().load_config())
     assert isinstance(session.scoring, Scoring)

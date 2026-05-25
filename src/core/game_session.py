@@ -11,11 +11,7 @@ if TYPE_CHECKING:
 
 class GameSession:
     def __init__(
-        self,
-        config: ConfigVO,
-        catalog: PieceCatalog,
-        ruleset: RuleSet,
-        scoring
+        self, config: ConfigVO, catalog: PieceCatalog, ruleset: RuleSet, scoring
     ):
         self.config = config
         self.catalog = catalog
@@ -28,8 +24,12 @@ class GameSession:
         self.remaining_pieces: dict[int, list[int]] = {
             i: list(piece_ids) for i in range(config.player_count)
         }
-        self._is_first_move: dict[int, bool] = {i: True for i in range(config.player_count)}
-        self.last_placed_piece: dict[int, int | None] = {i: None for i in range(config.player_count)}
+        self._is_first_move: dict[int, bool] = {
+            i: True for i in range(config.player_count)
+        }
+        self.last_placed_piece: dict[int, int | None] = {
+            i: None for i in range(config.player_count)
+        }
 
     @classmethod
     def from_memento(cls, memento: "Memento", catalog: PieceCatalog) -> "GameSession":
@@ -43,15 +43,15 @@ class GameSession:
         session.board.grid = [list(row) for row in memento.board_state]
         session.current_player_id = memento.current_player_id
         session.remaining_pieces = {
-            player_id: list(pieces)
-            for player_id, pieces in memento.remaining_pieces
+            player_id: list(pieces) for player_id, pieces in memento.remaining_pieces
         }
         session.consecutive_passes = memento.consecutive_passes
         session._is_first_move = {
-            player_id: flag
-            for player_id, flag in memento.is_first_move
+            player_id: flag for player_id, flag in memento.is_first_move
         }
-        session.last_placed_piece = {i: None for i in range(memento.config.player_count)}
+        session.last_placed_piece = {
+            i: None for i in range(memento.config.player_count)
+        }
         session.last_placed_piece.update(
             {player_id: piece_id for player_id, piece_id in memento.last_placed_piece}
         )

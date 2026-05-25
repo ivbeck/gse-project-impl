@@ -86,7 +86,10 @@ class ConfigBuilder:
         if set(self._starting_positions) != set(range(self._player_count)):
             raise ValueError("starting positions must cover every player")
         for position in self._starting_positions.values():
-            if not (0 <= position.row < self._board_height and 0 <= position.col < self._board_width):
+            if not (
+                0 <= position.row < self._board_height
+                and 0 <= position.col < self._board_width
+            ):
                 raise ValueError("starting positions must be on the board")
         if self._scoring_rule not in {"classic", "duo"}:
             raise ValueError("scoring_rule must be 'classic' or 'duo'")

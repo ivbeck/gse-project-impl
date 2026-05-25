@@ -1,4 +1,3 @@
-import pytest
 from core.piece_catalog import PieceCatalog
 
 
@@ -69,7 +68,9 @@ def test_piece_catalog_category_counts():
         squares = count_squares(piece)
         counts[squares] += 1
 
-    assert counts == {1: 1, 2: 1, 3: 2, 4: 5, 5: 12}, f"Category counts mismatch: {counts}"
+    assert counts == {1: 1, 2: 1, 3: 2, 4: 5, 5: 12}, (
+        f"Category counts mismatch: {counts}"
+    )
 
 
 def test_piece_catalog_all_pentominoes_have_5_squares():

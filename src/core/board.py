@@ -13,7 +13,9 @@ class Board:
         self.grid = [[None] * config.board_width for _ in range(config.board_height)]
 
     def in_bounds(self, row: int, col: int) -> bool:
-        return 0 <= row < self.config.board_height and 0 <= col < self.config.board_width
+        return (
+            0 <= row < self.config.board_height and 0 <= col < self.config.board_width
+        )
 
     def is_occupied(self, row: int, col: int) -> bool:
         if not self.in_bounds(row, col):

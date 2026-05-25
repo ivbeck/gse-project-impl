@@ -18,7 +18,7 @@ def config():
             1: Position(0, 19),
             2: Position(19, 19),
             3: Position(19, 0),
-        }
+        },
     )
 
 
@@ -51,7 +51,10 @@ def test_memento_contains_remaining_pieces(session):
 
 def test_memento_captures_last_placed_piece(session):
     from core.types import Move
-    session.submit_move(Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0))
+
+    session.submit_move(
+        Move(player_id=0, piece_id=0, orientation_index=0, row=0, col=0)
+    )
     m = Memento.from_session(session)
     assert (0, 0) in m.last_placed_piece
     assert (1, None) in m.last_placed_piece

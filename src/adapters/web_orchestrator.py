@@ -70,7 +70,9 @@ def create_web_orchestrator(
     def get_enumerator():
         nonlocal legal_move_enumerator
         if legal_move_enumerator is None:
-            legal_move_enumerator = LegalMoveEnumerator(session.catalog, session.ruleset)
+            legal_move_enumerator = LegalMoveEnumerator(
+                session.catalog, session.ruleset
+            )
         return legal_move_enumerator
 
     def get_ai_player():
@@ -137,7 +139,9 @@ def create_web_orchestrator(
         if not provided_legal_move_enumerator:
             legal_move_enumerator = None
 
-    def resolve_automatic_turns(clear_previous_skips: bool = False) -> tuple[list[dict], bool | None]:
+    def resolve_automatic_turns(
+        clear_previous_skips: bool = False,
+    ) -> tuple[list[dict], bool | None]:
         nonlocal recent_skipped_players
         if session is None or not setup_started:
             return [], None
@@ -145,7 +149,10 @@ def create_web_orchestrator(
             recent_skipped_players = []
         actions = []
         skips_this_run = []
-        max_turns = sum(len(pieces) for pieces in session.remaining_pieces.values()) + player_count()
+        max_turns = (
+            sum(len(pieces) for pieces in session.remaining_pieces.values())
+            + player_count()
+        )
         turns = 0
         while turns < max_turns and not is_finished():
             player_id = session.current_player_id
@@ -167,55 +174,67 @@ def create_web_orchestrator(
 
             move = get_ai_player().request_move(player_id, legal_moves)
             if move is None:
-                set_last_event({
-                    "type": "ai_no_move",
-                    "player_id": player_id,
-                    "color": player_color(player_id),
-                    "message": f"{player_color(player_id)} AI did not choose from available legal moves.",
-                })
+                set_last_event(
+                    {
+                        "type": "ai_no_move",
+                        "player_id": player_id,
+                        "color": player_color(player_id),
+                        "message": f"{player_color(player_id)} AI did not choose from available legal moves.",
+                    }
+                )
                 if skips_this_run:
                     recent_skipped_players = skips_this_run
                 return actions, True
 
             result = session.submit_move(move)
             if result == MoveResult.ILLEGAL:
-                set_last_event({
-                    "type": "ai_illegal_move",
-                    "player_id": player_id,
-                    "color": player_color(player_id),
-                    "message": f"{player_color(player_id)} AI selected an illegal move.",
-                })
+                set_last_event(
+                    {
+                        "type": "ai_illegal_move",
+                        "player_id": player_id,
+                        "color": player_color(player_id),
+                        "message": f"{player_color(player_id)} AI selected an illegal move.",
+                    }
+                )
                 if skips_this_run:
                     recent_skipped_players = skips_this_run
                 return actions, True
 
-            actions.append({
-                "player_id": player_id,
-                "action": "move",
-                "piece_id": move.piece_id,
-            })
-            set_last_event({
-                "type": "ai_move",
-                "player_id": player_id,
-                "color": player_color(player_id),
-                "piece_id": move.piece_id,
-                "message": f"{player_color(player_id)} AI placed piece {move.piece_id}.",
-            })
+            actions.append(
+                {
+                    "player_id": player_id,
+                    "action": "move",
+                    "piece_id": move.piece_id,
+                }
+            )
+            set_last_event(
+                {
+                    "type": "ai_move",
+                    "player_id": player_id,
+                    "color": player_color(player_id),
+                    "piece_id": move.piece_id,
+                    "message": f"{player_color(player_id)} AI placed piece {move.piece_id}.",
+                }
+            )
             session.advance_turn()
             turns += 1
 
         if skips_this_run:
             recent_skipped_players = skips_this_run
         if is_finished():
-            set_last_event({
-                "type": "game_finished",
-                "message": "Game finished. Final scores are available.",
-            })
+            set_last_event(
+                {
+                    "type": "game_finished",
+                    "message": "Game finished. Final scores are available.",
+                }
+            )
             return actions, False
-        set_last_event({
-            "type": "automatic_turn_limit",
-            "message": "Automatic turn resolution stopped before reaching a playable turn.",
-        })
+        set_last_event(
+            {
+                "type": "automatic_turn_limit",
+                "message": "Automatic turn resolution stopped before reaching a playable turn.",
+            }
+        )
         return actions, None
 
     def reject_finished_response() -> dict:
@@ -248,7 +267,9 @@ def create_web_orchestrator(
         return {
             "started": setup_started,
             "human_players": human_player_count if setup_started else None,
-            "board": [[cell if cell is not None else None for cell in row] for row in board],
+            "board": [
+                [cell if cell is not None else None for cell in row] for row in board
+            ],
             "current_player_id": current,
             "players": [
                 {
@@ -260,7 +281,9 @@ def create_web_orchestrator(
                 for pid, pieces in sorted(remaining.items())
             ],
             "scores": scores,
-            "winner_ids": [score["player_id"] for score in scores if score["is_winner"]],
+            "winner_ids": [
+                score["player_id"] for score in scores if score["is_winner"]
+            ],
             "game_status": status,
             "consecutive_passes": session.consecutive_passes,
             "last_event": last_event,
@@ -285,7 +308,10 @@ def create_web_orchestrator(
         max_humans = player_count()
         if requested_humans < 1 or requested_humans > max_humans:
             return JSONResponse(
-                {"ok": False, "error": f"human_players must be between 1 and {max_humans}"},
+                {
+                    "ok": False,
+                    "error": f"human_players must be between 1 and {max_humans}",
+                },
                 status_code=400,
             )
         if setup_started or is_finished():
@@ -340,18 +366,23 @@ def create_web_orchestrator(
 
         def orientation_transitions(orientation_grids):
             orientation_indexes = {
-                grid_key(grid): index
-                for index, grid in enumerate(orientation_grids)
+                grid_key(grid): index for index, grid in enumerate(orientation_grids)
             }
             rotate_to = []
             flip_to = []
             for index, grid in enumerate(orientation_grids):
-                rotate_to.append(find_orientation_index(orientation_indexes, rotate_grid(grid)))
-                horizontal = find_orientation_index(orientation_indexes, reflect_horizontal(grid))
+                rotate_to.append(
+                    find_orientation_index(orientation_indexes, rotate_grid(grid))
+                )
+                horizontal = find_orientation_index(
+                    orientation_indexes, reflect_horizontal(grid)
+                )
                 if horizontal != index:
                     flip_to.append(horizontal)
                     continue
-                vertical = find_orientation_index(orientation_indexes, reflect_vertical(grid))
+                vertical = find_orientation_index(
+                    orientation_indexes, reflect_vertical(grid)
+                )
                 flip_to.append(vertical)
             return rotate_to, flip_to
 
@@ -371,8 +402,7 @@ def create_web_orchestrator(
 
         return {
             "pieces": [
-                piece_payload(piece)
-                for piece in session.catalog.get_all_pieces()
+                piece_payload(piece) for piece in session.catalog.get_all_pieces()
             ]
         }
 
@@ -403,13 +433,15 @@ def create_web_orchestrator(
         render_board()
         if result == MoveResult.ILLEGAL:
             return {"ok": False, "error": "Illegal move"}
-        set_last_event({
-            "type": "human_move",
-            "player_id": move.player_id,
-            "color": player_color(move.player_id),
-            "piece_id": move.piece_id,
-            "message": f"{player_color(move.player_id)} placed piece {move.piece_id}.",
-        })
+        set_last_event(
+            {
+                "type": "human_move",
+                "player_id": move.player_id,
+                "color": player_color(move.player_id),
+                "piece_id": move.piece_id,
+                "message": f"{player_color(move.player_id)} placed piece {move.piece_id}.",
+            }
+        )
         session.advance_turn()
         ai_actions, _ = resolve_automatic_turns(clear_previous_skips=True)
         render_board()
@@ -426,12 +458,14 @@ def create_web_orchestrator(
             return {"ok": False, "error": "Player is controlled by AI"}
         player_id = session.current_player_id
         session.submit_pass()
-        set_last_event({
-            "type": "human_pass",
-            "player_id": player_id,
-            "color": player_color(player_id),
-            "message": f"{player_color(player_id)} passed.",
-        })
+        set_last_event(
+            {
+                "type": "human_pass",
+                "player_id": player_id,
+                "color": player_color(player_id),
+                "message": f"{player_color(player_id)} passed.",
+            }
+        )
         session.advance_turn()
         ai_actions, _ = resolve_automatic_turns(clear_previous_skips=True)
         render_board()

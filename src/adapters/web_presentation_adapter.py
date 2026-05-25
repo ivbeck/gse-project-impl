@@ -6,6 +6,7 @@ from core.types import GameStatus
 if TYPE_CHECKING:
     from core.game_session import GameSession
 
+
 class WebPresentationAdapter(PresentationOutput):
     def __init__(self, session: GameSession | None) -> None:
         self._last_board = None

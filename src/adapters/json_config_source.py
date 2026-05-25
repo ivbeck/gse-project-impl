@@ -25,20 +25,23 @@ class JsonConfigSource:
         bw = data.get("board_width", 20)
         bh = data.get("board_height", 20)
         pc = data.get("player_count", 4)
-        sp = data.get("starting_positions", {
-            "0": {"row": 0, "col": 0},
-            "1": {"row": 0, "col": bw - 1},
-            "2": {"row": bh - 1, "col": bw - 1},
-            "3": {"row": bh - 1, "col": 0},
-        })
+        sp = data.get(
+            "starting_positions",
+            {
+                "0": {"row": 0, "col": 0},
+                "1": {"row": 0, "col": bw - 1},
+                "2": {"row": bh - 1, "col": bw - 1},
+                "3": {"row": bh - 1, "col": 0},
+            },
+        )
         scoring_rule = data.get("scoring_rule", "classic")
         return (
             ConfigBuilder()
             .with_board_dimensions(bw, bh)
             .with_player_count(pc)
-            .with_starting_positions({
-                int(k): Position(v["row"], v["col"]) for k, v in sp.items()
-            })
+            .with_starting_positions(
+                {int(k): Position(v["row"], v["col"]) for k, v in sp.items()}
+            )
             .with_scoring_rule(scoring_rule)
             .build()
         )

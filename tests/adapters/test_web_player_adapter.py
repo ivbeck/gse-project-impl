@@ -1,4 +1,3 @@
-import pytest
 import threading
 import time
 from adapters.web_player_adapter import WebPlayerAdapter

@@ -22,7 +22,7 @@ class CLI(PresentationOutput):
 
     def prompt_replay(self) -> bool:
         response = input("Play again? (y/n): ")
-        return response.lower() == 'y'
+        return response.lower() == "y"
 
     def prompt_human_player_count(self, max_players: int) -> int:
         if max_players < 1:

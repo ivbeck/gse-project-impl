@@ -20,7 +20,7 @@ def config():
             1: Position(0, 19),
             2: Position(19, 19),
             3: Position(19, 0),
-        }
+        },
     )
 
 
@@ -70,24 +70,26 @@ def test_simple_ai_player_prefers_larger_coverage(config):
 
 
 def test_simple_ai_player_golden_from_json_state():
-    state_json = json.dumps({
-        "config": {
-            "board_width": 20,
-            "board_height": 20,
-            "player_count": 4,
-            "starting_positions": {
-                "0": {"row": 0, "col": 0},
-                "1": {"row": 0, "col": 19},
-                "2": {"row": 19, "col": 19},
-                "3": {"row": 19, "col": 0},
+    state_json = json.dumps(
+        {
+            "config": {
+                "board_width": 20,
+                "board_height": 20,
+                "player_count": 4,
+                "starting_positions": {
+                    "0": {"row": 0, "col": 0},
+                    "1": {"row": 0, "col": 19},
+                    "2": {"row": 19, "col": 19},
+                    "3": {"row": 19, "col": 0},
+                },
             },
-        },
-        "board_state": [[None for _ in range(20)] for _ in range(20)],
-        "current_player_id": 0,
-        "remaining_pieces": [[0, [0, 1]], [1, []], [2, []], [3, []]],
-        "consecutive_passes": 0,
-        "is_first_move": [[0, True], [1, True], [2, True], [3, True]],
-    })
+            "board_state": [[None for _ in range(20)] for _ in range(20)],
+            "current_player_id": 0,
+            "remaining_pieces": [[0, [0, 1]], [1, []], [2, []], [3, []]],
+            "consecutive_passes": 0,
+            "is_first_move": [[0, True], [1, True], [2, True], [3, True]],
+        }
+    )
     repo = JsonStateRepo()
     memento = repo.restore(state_json)
     catalog = PieceCatalog()
@@ -99,5 +101,7 @@ def test_simple_ai_player_golden_from_json_state():
         session.remaining_pieces[session.current_player_id],
         session.is_first_move(session.current_player_id),
     )
-    result = SimpleAiPlayer(catalog, session.board).request_move(session.current_player_id, legal_moves)
+    result = SimpleAiPlayer(catalog, session.board).request_move(
+        session.current_player_id, legal_moves
+    )
     assert result == Move(player_id=0, piece_id=1, orientation_index=0, row=0, col=0)

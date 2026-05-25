@@ -15,10 +15,7 @@ class Memento:
 
     @classmethod
     def from_session(cls, session: GameSession) -> "Memento":
-        board_state = tuple(
-            tuple(cell for cell in row)
-            for row in session.board.grid
-        )
+        board_state = tuple(tuple(cell for cell in row) for row in session.board.grid)
         remaining_pieces = tuple(
             (player_id, tuple(pieces))
             for player_id, pieces in sorted(session.remaining_pieces.items())

@@ -5,17 +5,22 @@ from adapters.json_config_source import JsonConfigSource, DUO_CONFIG_JSON
 from bootstrap import create_game
 import uvicorn
 
+
 def run_web(mode: str = "classic"):
     config_json = DUO_CONFIG_JSON if mode == "duo" else "{}"
     config = JsonConfigSource(config_json).load_config()
+
     def create_session():
         return create_game(config)
 
     session = create_session()
     player = WebPlayerAdapter()
     presenter = WebPresentationAdapter(session)
-    app = create_web_orchestrator(session, player, presenter, session_factory=create_session)
+    app = create_web_orchestrator(
+        session, player, presenter, session_factory=create_session
+    )
     uvicorn.run(app, host="127.0.0.1", port=8000)
+
 
 if __name__ == "__main__":
     run_web()
