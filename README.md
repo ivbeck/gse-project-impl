@@ -87,12 +87,22 @@ Notes on commands
 
 ## Troubleshooting
 
-- I only see console output and no browser UI: you likely started the CLI (no `--gui` flag) or used the wrong `uv` invocation. Re-run with `uv run python -m app --gui`.
-- Server not reachable at http://127.0.0.1:8000: check the terminal where you started the app — Uvicorn logs should show the server URL (look for "Uvicorn running on http://127.0.0.1:8000"). If port 8000 is in use, edit `src/web_main.py` and change the `port=` argument passed to `uvicorn.run(...)`, then restart.
-- Missing dependencies / import errors: ensure `uv sync` completed successfully and that you activated the venv before running commands. If you installed `uv` globally with `pipx`, ensure you still activate the project venv when running Python module commands.
-- Static UI not loading or template errors: verify `src/static/` and `src/templates/game.html` exist. The FastAPI orchestrator mounts `/static` and serves `game.html` at `/`.
+1. I only see console output and no browser UI: you likely started the CLI (no `--gui` flag) or used the wrong `uv` invocation. Re-run with `uv run python -m app --gui`.
 
-If you still have issues, share the terminal output (copy the last ~100 lines) and I can help diagnose further.
+2. Server not reachable at http://127.0.0.1:8000: check the terminal where you started the app — Uvicorn logs should show the server URL (look for "Uvicorn running on http://127.0.0.1:8000"). If port 8000 is in use, edit `src/web_main.py` and change the `port=` argument passed to `uvicorn.run(...)`, then restart.
+
+3. If you see the following error after running `uv run pytest`:
+   ERROR: usage: pytest [options] [file_or_dir] [file_or_dir] [...]
+   pytest: error: unrecognized arguments: --cov=src --cov-report=term-missing --cov-report=xml --cov-fail-under=85
+   This means `pytest-cov` is not installed. Fix it by running:
+
+```bash
+uv add --dev pytest-cov
+```
+
+4. Missing dependencies / import errors: ensure `uv sync` completed successfully and that you activated the venv before running commands. If you installed `uv` globally with `pipx`, ensure you still activate the project venv when running Python module commands.
+
+5. Static UI not loading or template errors: verify `src/static/` and `src/templates/game.html` exist. The FastAPI orchestrator mounts `/static` and serves `game.html` at `/`.
 
 ## Development workflow
 

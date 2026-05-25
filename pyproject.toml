@@ -30,7 +30,10 @@ build-backend = "hatchling.build"
 ignore_missing_imports = true
 
 [dependency-groups]
-dev = ["pytest>=9.0.3"]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+]
 
 [project.scripts]
 blokus-engine = "app:main"
