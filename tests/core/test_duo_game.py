@@ -47,7 +47,7 @@ def test_duo_ai_vs_ai_game_finishes_with_consistent_ranking():
     assert session.detect_termination() == GameStatus.FINISHED
     scores = session.final_scores()
     assert len(scores) == 2
-    # Highest score first; winner flag set exactly for the maximum score.
-    assert scores == sorted(scores, key=lambda s: -s.score)
-    top = scores[0].score
-    assert all(s.is_winner == (s.score == top) for s in scores)
+    # Basic scheme: lowest remaining-squares first; winner is the minimum.
+    assert scores == sorted(scores, key=lambda s: s.score)
+    best = scores[0].score
+    assert all(s.is_winner == (s.score == best) for s in scores)
