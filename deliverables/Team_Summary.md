@@ -1,14 +1,14 @@
 # Team_Summary.md
 
-> **Team Project Summary**  
-> _1-2 page overview of your team's project, AI usage, and key results._
+> **Team Project Summary**
+> _1-2 page overview of the team's project, AI usage, and key results._
 
 ---
 
 ## Team Information
 
-**Team Name:** `[Your Team Name/ID]`  
-**Project:** Blokus Game Engine (Classic + Duo)  
+**Team Name:** `Team 2`\
+**Project:** Blokus Game Engine (Classic + Duo)\
 **Team Members:** `Iven Beck, Petar Malamov, Denis Maxheimer, Richard Plummer`
 
 ---
@@ -17,21 +17,58 @@
 
 ### Overview
 
-Briefly describe the scope of your project (incldue toolkit used such as programming language, build tools, editors etc.). What features did you implement? What was the scope of the Blokus Classic and Blokus Duo implementations?
+Python implementation (build backend: `hatchling`, dependency/runtime: `uv`) of the Blokus board game. Milestone 1 delivered Classic Blokus (4 players, 20×20 board, corner starts); Milestone 2 added the Blokus Duo variant (2 players, 14×14 board, interior starting cells, all-pieces-placed bonus with tie co-winners) as a configurable extension without forking the engine. The engine exposes both a CLI (`blokus-engine`) and a FastAPI-based browser GUI (`blokus-engine --gui`), supports JSON save/load via a `Memento`, and ships a deterministic `SimpleAiPlayer` for human-vs-AI and AI-vs-AI play. 180 tests pass on the integrated branch (`uv run pytest`).
 
 ### Architecture Diagram
 
-> **Note:** Insert a simple architecture diagram here (e.g., ASCII or image)
+Hexagonal (Ports & Adapters) per binding decision `ADR-FINAL-P2` (Strategy + Command + Builder + Memento). Adapters implement ports declared by `Core`; `Bootstrap` is the procedural composition root.
+
+```mermaid
+flowchart LR
+    BS[Bootstrap<br/>composition root]
+
+    subgraph CORE [Core - Domain]
+        GS[GameSession]
+        RS[RuleSet]
+        Sc[Scoring<br/>Strategy: Classic / Duo]
+        Bd[Board]
+        PCat[PieceCatalog]
+        Mm[Memento<br/>frozen]
+        LE[LegalMoveEnumerator]
+    end
+
+    subgraph PORTS [Ports - Interfaces]
+        PI[PlayerInput]
+        PO[PresentationOutput]
+    end
+
+    subgraph ADAPT [Adapters]
+        CLI
+        Web[Web - FastAPI<br/>WebOrchestrator + WebPlayer + WebPresentation]
+        JSR[JsonStateRepo]
+        JCS[JsonConfigSource]
+        SAI[SimpleAiPlayer]
+        Hum[HumanPlayer]
+    end
+
+    BS -.composes.-> CORE
+    BS -.composes.-> ADAPT
+    CORE --- PORTS
+    CLI -- implements --> PO
+    Web -- implements --> PO
+    JSR
+    JCS
+    SAI -- implements --> PI
+    Hum -- implements --> PI
+```
 
 ### Key Components
 
-1. **Game Board:** `[Description]`
-2. **Move Validation:** `[Description]`
-3. **Game State Management:** `[Description]`
-4. **CLI Interface:** `[Description]`
-5. **Test Suite:** `[Description]`
-
-> **Note:** Use these as examples only. Define additional components relevant to your team's implementation (i.e., splitting of tasks depend on team size etc.).
+1. **Core Domain:** `GameSession`, `RuleSet`, `Scoring` (Classic + `DuoScoring` strategies), `Board`, `PieceCatalog`, frozen `Memento`, `LegalMoveEnumerator`. Holds all game rules and state; never imports adapters.
+2. **Ports:** Two main interfaces — `PlayerInput`, `PresentationOutput` — declared in `Core`.
+3. **Adapters:** `CLI`, `WebOrchestrator` (FastAPI: `/state`, `/move`, `/pass`, `/health`, `/piece-catalog`, `/reset`) + `WebPlayerAdapter` + `WebPresentationAdapter`, `JsonStateRepo`, `JsonConfigSource`, `SimpleAiPlayer`, `HumanPlayer`.
+4. **Bootstrap:** Procedural composition root (`src/bootstrap.py`) wiring config → ports → adapters → `GameSession`. Single args-based CLI with `--gui`, `--duo`, `--help` flags.
+5. **Test Suite:** 180 passing tests under `tests/core/` and `tests/adapters/`, including `test_config_vo_literals.py` (DR-1 tripwire), `test_duo_game.py` (Duo determinism), `test_scoring.py` (bonus + co-winners), and `test_web_orchestrator.py` (HTTP contract).
 
 ---
 
@@ -39,29 +76,28 @@ Briefly describe the scope of your project (incldue toolkit used such as program
 
 ### High-Level Overview
 
-Describe which AI tools you used and where. Be specific about the tools/models and how they were integrated into your workflow.
-
-| Phase                     | AI Tool/Model                    | Usage                                             | Validation Method                               |
-| ------------------------- | -------------------------------- | ------------------------------------------------- | ----------------------------------------------- |
-| `[e.g., Requirements]`    | `[e.g., GPT-5.2]`                | `[e.g., Generate requirements from user stories]` | `[e.g., Peer review, manual verification]`      |
-| `[e.g., Code Generation]` | `[e.g., GitHub Copilot (Agent)]` | `[e.g., Generate board representation code]`      | `[e.g., Unit tests, manual testing]`            |
-| `[e.g., Testing]`         | `[e.g., Claude 4.5 Sonnet]`      | `[e.g., Generate test cases]`                     | `[e.g., Test execution, coverage analysis]`     |
-| `[e.g., Debugging]`       | `[e.g., DeepSeek Coder]`         | `[e.g., Debug failing tests]`                     | `[e.g., Manual verification, regression tests]` |
-
-> **Note:** Use these as examples only
+| Phase                  | AI Tool / Model                          | Usage                                                                                                                                    | Validation Method                                                                                  |
+| ---------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Requirements           | Claude Sonnet 4.6                        | Ambiguity detection on SPEC.md (8 AMBs surfaced); SPEC v2 rewrite with resolutions embedded                                              | Manual team review against Mattel BJV44 rulebook                                                   |
+| Requirements           | MiniMax-M2.7 (plan mode)                 | SRS baseline `SPEC_M1.md`                                                                                                                | Cross-check resolved AMB IDs into spec                                                             |
+| Requirements           | OpenCode CLI + GPT-5.5                   | Persona-driven functional/non-functional requirements                                                                                    | Human review of persona influence; baseline comparison                                             |
+| Architecture / ADR     | Claude Opus 4.7 (Claude Code)            | Three-persona `ARCHITECTURE_PROMPT_v1.md`; binding `ADR-FINAL-P2` (DS-hexagonal-2); `AGENTS.md` minimal context file                     | Drift-risk tripwires DR-1…DR-7; DR-1 and DR-3 enforced by tests                                    |
+| UML                    | Gemini 3 Flash                           | v1 Mermaid class diagram from ADR; LLM-as-Judge validation against five-criterion rubric; v2 corrections                                 | Separate validator session; criteria scoring; manual ADR/FR cross-check                            |
+| Coding (M1 Core)       | MiniMax-M2.7 (opencode CLI)              | Subagent-driven TDD orchestrating 17 atomic tasks; reviewer-turn subagent on diffs                                                       | `uv run pytest` (65 tests at Task 16), `ruff`, `mypy`, reviewer-turn for silent hallucinations     |
+| Coding (Web GUI)       | Claude Opus 4.7                          | Web GUI spec + implementation plan; `/frontend-design` UX redesign pass                                                                  | Adapter pytest suite + manual browser smoke test                                                   |
+| Coding (Duo M2)        | Claude Opus 4.7                          | Duo design + plan + execution via brainstorm → write-plan → execute-plan; Duo GUI guardrails                                             | RED→GREEN per step; FastAPI `TestClient` probes of `/state`; full suite 180 passed                 |
+| Coding (GUI gameplay)  | OpenCode + GPT-5.5                       | Move-safety remediation, hover preview, end-game table, `/piece-catalog`, `/reset`, CLI player count                                     | `uv run pytest`, focused adapter tests, manual diff review                                         |
+| Maintenance            | Cursor 3.4.20                            | `pyproject.toml` migration to Hatchling; single args-based CLI entry point                                                               | `uv sync && uv run blokus-engine --help`; CLI smoke                                                |
+| Code Review            | Gemini 3 Flash                           | G3 (with/without authority-cue comments) on `rule_set.py`; G4 (persona + pseudocode + chain-of-thought) on `scoring.py`                  | Manual source-trace of every finding to separate real bugs from hallucinations                     |
+| Debugging              | OpenCode + GPT-5.5                       | Explain-Then-Fix and AutoSD loops for turn-flow, CLI alignment, piece/orientation bugs                                                   | Targeted pytest, endpoint smoke, static UI checks                                                  |
+| Merge                  | OpenCode + GPT-5.5                       | Staged-pipeline resolution of the GUI ↔ Duo branch conflict                                                                              | `uv build`, full pytest (176 passed pre-Duo-tests), `git diff --cached --check`                    |
 
 ### AI Usage Policy
 
-Describe any AI usage policies, guidelines, or constraints your team followed during development. This may also include course-specific requirements, or internal team agreements.
-
-| Policy/Guideline                  | Description                                               | Application                                         |
-| --------------------------------- | --------------------------------------------------------- | --------------------------------------------------- |
-| `[e.g., Disclosure Requirement]`  | `[e.g., All AI-generated code must be clearly commented]` | `[e.g., Added `// AI-Generated: GPT-5.2` headers]`  |
-| `[e.g., Citation Policy]`         | `[e.g., AI contributions must be cited in README]`        | `[e.g., Listed tools and outputs in `AI_USAGE.md`]` |
-| `[e.g., Human Oversight Rule]`    | `[e.g., No fully autonomous code generation]`             | `[e.g., All generated code reviewed before commit]` |
-| `[e.g., No Proprietary Data Use]` | `[e.g., Did not feed project code into public LLMs]`      | `[e.g., Used local models or private instances]`    |
-
-> **Note:** Use these as examples only. Adjust based on your team's actual practices.
+| Policy / Guideline             | Description                                                                                              | Application                                                                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Disclosure via prompt logs     | Every AI-assisted session is captured in `prompts/<owner>_<task>.{json,md}` and committed alongside code | Visible in `OWNERSHIP.md` evidence column for every work package                                         |
+| Human review before commit     | No AI-generated diff is committed without a developer reading the full diff first                       | Used across Core/M1, Web GUI, Duo, debugging, and merge work (see Iven, Denis, Petar portfolios §4)      |
 
 ---
 
@@ -69,44 +105,47 @@ Describe any AI usage policies, guidelines, or constraints your team followed du
 
 ### What Worked Well
 
-- `[Result 1]`
-- `[Result 2]`
-- `[Result 3]`
+- **Configuration-as-data + Strategy seams** made Blokus Duo a no-fork extension: a new `scoring_rule` config value + `DuoScoring` strategy + threading `last_placed_piece` through the `Memento` — `Core` never references "Duo" by name.
+- **`AGENTS.md` minimal context file** propagated architectural invariants (no `Core.*`→adapter imports, no hard-coded `20`/`4`, Memento round-trip JSON-only) across 30+ commits without re-derivation.
+- **Reviewer-turn subagent on the diff** (not on the tests) caught silent hallucinations in `GameSession`, `Memento`, and `StateRepository` that all 45 author-supplied tests had passed (see Counterexample 1).
+- **Two-phase G3/G4 review** surfaced two real critical bugs: `is_first_move` unverified for players 2–4 in `check_legality`, and the inverted leaderboard in `DuoScoring.rank` from double-negation. __TODO!__
+- **Backend-frontend separation + a dedicated UX-reflection prompt** turned a functional-but-unplayable first GUI pass into a Swiss/editorial redesign in one round (`/frontend-design`).
+- **Persona-driven requirements** (Ethan, Priya, George) captured learnability/accessibility/save-load needs a purely technical brief would have missed.
 
 ### What Failed or Was Challenging
 
-- `[Challenge 1]`
-- `[Challenge 2]`
-- `[Challenge 3]`
+- **`AGENTS.md` drifted**: line still said "Duo is out of scope" after the Duo milestone shipped, and the dual-language ("Java or Python") section persisted until manually rewritten.
+- **Author-supplied tests doubled as both spec and validator** — three critical defects in `GameSession`/`Memento`/`StateRepository` survived a green test suite (Counterexample 1).
+- **Broad remediation prompts produced over-refactoring** of working code beyond the requested bug fixes (Counterexample 3).
+- **Static GUI tests** assert file content (`gui.js` contains `refreshStartOptions`) but cannot prove that a Duo seat-3/4 button is actually un-clickable in a browser.
+- **Authority-cue comments triggered overcompensation, not suppression**: the model hallucinated a critical finding on a `# flawless`-marked method rather than skipping it.
+- **Functional acceptance criteria underdelivered for UX work**: "user can POST `/move` and get 200" was met by a generic dark "gamer" UI that was nonetheless unplayable.
 
 ### Lessons Learned
 
-- `[Lesson 1]`
-- `[Lesson 2]`
-- `[Lesson 3]`
+- Author-supplied tests are a *specification* to the LLM; they cannot also be the *validator*. A separate reviewer turn that consumes the diff plus FR IDs is the load-bearing step. __TODO!__
+- Constraints that are falsifiable by code must either become an executable tripwire (DR-1 literal scan in `CODING_PROMPT_v1`) or be deleted in the same PR that invalidates them — manual prose drifts within a single milestone.
+- Configuration-over-forking refunds its ADR cost at the next milestone: adding Duo cost data + one Strategy, not a parallel engine. __TODO! REWRITE__
+- Multi-model routing by task type (MiniMax for planning/Core TDD, Claude Opus 4.7 for UX + Duo, OpenCode + GPT-5.5 for GUI gameplay/debugging, Cursor for single-file maintenance, Gemini Flash for review/UML) worked very well in team's experience because it allowed for leveraging each Models particular strengths.
 
 ---
 
 ## Top 3 Counterexamples
 
-Provide links to notable counterexamples where guidelines from other teams did not work as expected.
+1. **Counterexample 1:** `Silent hallucinations in Tasks 6–8 — tests pass, code wrong`\
+   **Link:** `deliverables/Portfolio_Iven.md` Counterexample 1; commit `67397aa`; `prompts/iven_coding_subagent_tasks_6_8_issue_fix.json`\
+   **Guideline that Failed:** Topic 3 — Testing, Team 3 · G1+G2 ("Define the Testing Objective + Structured Test Prompts")\
+   **What Happened:** All 45 author-supplied tests went green, but `GameSession.consecutive_passes` was never incremented (no `submit_pass()`); `StateRepository.save()` took the live session, bypassing the `Memento`; and the "frozen" `Memento` held a mutable `dict[int, list[int]]`. Tests encoded the author's blind spots; a separate reviewer-turn on the diff was added as a hard gate.
 
-1. **Counterexample 1:** `[Title]`  
-   **Link:** `[Link to counterexample documentation]`  
-   **Guideline that Failed:** `[Name of guideline]`  
-   **What Happened:** `[Brief description]`
+2. **Counterexample 2:** `AGENTS.md goes stale — still claims "Duo out of scope" after Duo shipped`\
+   **Link:** `deliverables/Portfolio_Denis.md` Counterexample 1; `AGENTS.md:9`, `AGENTS.md:21`; `prompts/denis_coding_duo_mode_gui.json`\
+   **Guideline that Failed:** Topic 2 — Coding, Team 2 · G1 ("Context-Aware Grounding via Minimal Manual Documentation")\
+   **What Happened:** A hand-written constraint file is cheap to write and cheap to forget. After ≈17 Duo commits in a day, `AGENTS.md` still forbade Duo paths and described a Java/Maven *or* Python/uv build — an agent obeying it literally would have refused work already merged. Refinement: scope/constraint notes must be either expressed as tripwires or deleted in the same PR that invalidates them.
 
-2. **Counterexample 2:** `[Title]`  
-   **Link:** `[Link to counterexample documentation]`  
-   **Guideline that Failed:** `[Name of guideline]`  
-   **What Happened:** `[Brief description]`
-
-3. **Counterexample 3:** `[Title]`  
-   **Link:** `[Link to counterexample documentation]`  
-   **Guideline that Failed:** `[Name of guideline]`  
-   **What Happened:** `[Brief description]`
-
-> **Note:** The link to counterexample documentation can be any repository path or platform link (e.g., issue)
+3. **Counterexample 3:** `Broad remediation prompts led to over-refactoring and partially wired features`\
+   **Link:** `deliverables/Portfolio_Petar.md` Counterexample 4; commits `e0755b4`, `5348e95`, `8b68253`; `prompts/petar_gui_refactor.json`\
+   **Guideline that Failed:** Topic 2 — Coding, Team 2 · G1+G2 ("Context-Aware Grounding + Interactive TDD Validation")\
+   **What Happened:** A broad "check the game logic setup and fix correctness issues" prompt gave the model room to refactor working code into helper methods, normalize style, and ship features (AI player) that were technically present but not user-visible. Refinement: remediation prompts must add explicit "do not refactor unrelated working code; every new feature must reach a user-visible flow" constraints, and later prompts were narrowed to file/function scope.
 
 ---
 
@@ -114,45 +153,40 @@ Provide links to notable counterexamples where guidelines from other teams did n
 
 ### Impact on Design
 
-How did the requirement to support Blokus Duo affect your design decisions?
+How did the requirement to support Blokus Duo affect the design decisions?
 
-- **Initial Design Decisions:** `[Description]`
-- **Changes Made for Duo Support:** `[Description]`
-- **Challenges Encountered:** `[Description]`
-- **Solutions Implemented:** `[Description]`
+- **Initial Design Decisions:** `ADR-FINAL-P2` selected Hexagonal (Ports & Adapters) with Strategy + Command + Builder + Memento. DR-1 ("configuration is data, not constants") was a binding drift-risk tripwire enforced by `test_config_vo_literals.py`. Duo was deliberately out of scope of the ADR itself but the Strategy + Builder seams were left intentionally open for variant scoring.
+- **Changes Made for Duo Support:** Added a `scoring_rule` field to `ConfigVO` (via Builder) and to `JsonConfigSource` with a Duo preset; implemented `DuoScoring` as a Strategy behind a `build_scoring` factory; threaded `last_placed_piece` through `GameSession`, `Memento`, and the JSON state round-trip; exposed `--duo` for CLI and web; surfaced `scoring_rule` and `starting_positions` in `/state` so the GUI can render mode-aware title and interior starting cells.
+- **Challenges Encountered:** The `Memento` had to carry `last_placed_piece` so a restored Duo game scored identically (SC-1). The repo's static GUI tests assert file content, not browser behaviour, so the Duo seat-cap guardrail had to be re-verified via a FastAPI `TestClient` probe of `/state`. The merge between the GUI work and the Duo branch was semantic (not just textual) and required staged resolution to preserve both feature sets.
+- **Solutions Implemented:** All Duo behaviour was expressed as data + one swapped Scoring strategy, so `Core` never learns the word "Duo". The merge was resolved file-by-file, preserving GUI lifecycle/AI-skip behaviour and Duo config/scoring/start-positions; `uv build` + `uv run pytest` (176 passed at merge time, 180 after Duo-specific tests were added) + `git diff --cached --check` gated the commit.
 
 ### Configuration Approach
 
-How did you implement configuration to support both Classic and Duo modes?
+How did the team implement configuration to support both Classic and Duo modes?
 
-- `[Description of configuration approach]`
+- `scoring_rule` is a `ConfigVO` field set via `ConfigBuilder`; `JsonConfigSource` parses it from JSON and ships a Duo preset (14×14, 2 players, interior `starting_positions`).
+- `build_scoring` factory selects `Scoring` vs `DuoScoring` from `scoring_rule`, called by `Bootstrap` at composition time and also from a restored `Memento` (so reload re-derives the right Strategy).
+- The frozen `Memento` carries the full `ConfigVO` plus `last_placed_piece`, making the saved state the single source of truth on reload (DR-3, SC-1).
+- `--duo` (CLI + web) toggles the Duo preset; the GUI reads `players.length` and `scoring_rule` from `/state` to drive the title suffix and seat caps — no hard-coded "Duo" string in the frontend.
 
 ### Testing Strategy
 
-How did you update your test suite to cover both modes?
+How did the team update the test suite to cover both modes?
 
-- `[Description of testing strategy]`
+- Suite grew from 65 tests at Milestone 1 Task 16 to 180 passing on the integrated branch.
+- Duo-specific core tests: `tests/core/test_scoring.py` (all-pieces-bonus only with zero remainder; ties produce co-winners), `tests/core/test_duo_game.py` (AI-vs-AI determinism across identical seeds), `tests/core/test_memento.py` (round-trip of `last_placed_piece`).
+- Adapter tests: `tests/adapters/test_json_config_source.py` (Duo preset parsing), `tests/adapters/test_json_state_repo.py` (`scoring_rule` + `last_placed_piece` round-trip), `tests/adapters/test_web_orchestrator.py` (`/state` exposes `scoring_rule` and `starting_positions`), `tests/adapters/test_web_gui_*_static.py` (mode-aware title + seat caps in static assets).
+- Architectural tripwires: `tests/core/test_config_vo_literals.py` (DR-1: regex-scan `src/core/` for hard-coded `20`/`4`) — protected the Duo work from board-size assumptions.
+- Behavioural fallback: a FastAPI `TestClient` probe of `/state` before game start verifies the runtime contract (Duo → 2 players + `scoring_rule="duo"`; Classic → 4 + `"classic"`) — closing the gap left by the static-text GUI test convention.
 
 ---
 
 ## Repository Links
 
-- **Project Repository:** `[Link to repository]`
-- **Issue Tracker:** `[Link to issues]`
-- **CI/CD Pipeline:** `[Link to CI/CD, if used]`
+- **Project Repository:** https://github.com/ivbeck/gse-project-impl
+- **Issue Tracker:** In-Person meetings; Discord and Whatsapp channels for issue tracking and splitting up work
+- **CI/CD Pipeline:** Local validation runs; GitHub actions
 
 ---
 
-## Instructions for Use
-
-1. **Replace all `[...]` placeholders** with your team's specific content
-2. **Keep it concise** (1-2 pages max)
-3. **Include one architecture diagram** (can be simple ASCII art or an image)
-4. **Be honest about what worked and what didn't**
-5. **Link to specific counterexamples** and documentation
-6. **Reflect on how the change request affected your design**
-7. **Submit as `Team_Summary.md`** in your project repository
-
----
-
-_Template version: 1.0 | Last updated: 24 February 2026_
+_Template version: 1.0 | Last updated: 25 May 2026_
