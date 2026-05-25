@@ -76,28 +76,28 @@ flowchart LR
 
 ### High-Level Overview
 
-| Phase                  | AI Tool / Model                          | Usage                                                                                                                                    | Validation Method                                                                                  |
-| ---------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Requirements           | Claude Sonnet 4.6                        | Ambiguity detection on SPEC.md (8 AMBs surfaced); SPEC v2 rewrite with resolutions embedded                                              | Manual team review against Mattel BJV44 rulebook                                                   |
-| Requirements           | MiniMax-M2.7 (plan mode)                 | SRS baseline `SPEC_M1.md`                                                                                                                | Cross-check resolved AMB IDs into spec                                                             |
-| Requirements           | OpenCode CLI + GPT-5.5                   | Persona-driven functional/non-functional requirements                                                                                    | Human review of persona influence; baseline comparison                                             |
-| Architecture / ADR     | Claude Opus 4.7 (Claude Code)            | Three-persona `ARCHITECTURE_PROMPT_v1.md`; binding `ADR-FINAL-P2` (DS-hexagonal-2); `AGENTS.md` minimal context file                     | Drift-risk tripwires DR-1…DR-7; DR-1 and DR-3 enforced by tests                                    |
-| UML                    | Gemini 3 Flash                           | v1 Mermaid class diagram from ADR; LLM-as-Judge validation against five-criterion rubric; v2 corrections                                 | Separate validator session; criteria scoring; manual ADR/FR cross-check                            |
-| Coding (M1 Core)       | MiniMax-M2.7 (opencode CLI)              | Subagent-driven TDD orchestrating 17 atomic tasks; reviewer-turn subagent on diffs                                                       | `uv run pytest` (65 tests at Task 16), `ruff`, `mypy`, reviewer-turn for silent hallucinations     |
-| Coding (Web GUI)       | Claude Opus 4.7                          | Web GUI spec + implementation plan; `/frontend-design` UX redesign pass                                                                  | Adapter pytest suite + manual browser smoke test                                                   |
-| Coding (Duo M2)        | Claude Opus 4.7                          | Duo design + plan + execution via brainstorm → write-plan → execute-plan; Duo GUI guardrails                                             | RED→GREEN per step; FastAPI `TestClient` probes of `/state`; full suite 180 passed                 |
-| Coding (GUI gameplay)  | OpenCode + GPT-5.5                       | Move-safety remediation, hover preview, end-game table, `/piece-catalog`, `/reset`, CLI player count                                     | `uv run pytest`, focused adapter tests, manual diff review                                         |
-| Maintenance            | Cursor 3.4.20                            | `pyproject.toml` migration to Hatchling; single args-based CLI entry point                                                               | `uv sync && uv run blokus-engine --help`; CLI smoke                                                |
-| Code Review            | Gemini 3 Flash                           | G3 (with/without authority-cue comments) on `rule_set.py`; G4 (persona + pseudocode + chain-of-thought) on `scoring.py`                  | Manual source-trace of every finding to separate real bugs from hallucinations                     |
-| Debugging              | OpenCode + GPT-5.5                       | Explain-Then-Fix and AutoSD loops for turn-flow, CLI alignment, piece/orientation bugs                                                   | Targeted pytest, endpoint smoke, static UI checks                                                  |
-| Merge                  | OpenCode + GPT-5.5                       | Staged-pipeline resolution of the GUI ↔ Duo branch conflict                                                                              | `uv build`, full pytest (176 passed pre-Duo-tests), `git diff --cached --check`                    |
+| Phase                 | AI Tool / Model               | Usage                                                                                                                   | Validation Method                                                                              |
+| --------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Requirements          | Claude Sonnet 4.6             | Ambiguity detection on SPEC.md (8 AMBs surfaced); SPEC v2 rewrite with resolutions embedded                             | Manual team review against Mattel BJV44 rulebook                                               |
+| Requirements          | MiniMax-M2.7 (plan mode)      | SRS baseline `SPEC_M1.md`                                                                                               | Cross-check resolved AMB IDs into spec                                                         |
+| Requirements          | OpenCode CLI + GPT-5.5        | Persona-driven functional/non-functional requirements                                                                   | Human review of persona influence; baseline comparison                                         |
+| Architecture / ADR    | Claude Opus 4.7 (Claude Code) | Three-persona `ARCHITECTURE_PROMPT_v1.md`; binding `ADR-FINAL-P2` (DS-hexagonal-2); `AGENTS.md` minimal context file    | Drift-risk tripwires DR-1…DR-7; DR-1 and DR-3 enforced by tests                                |
+| UML                   | Gemini 3 Flash                | v1 Mermaid class diagram from ADR; LLM-as-Judge validation against five-criterion rubric; v2 corrections                | Separate validator session; criteria scoring; manual ADR/FR cross-check                        |
+| Coding (M1 Core)      | MiniMax-M2.7 (opencode CLI)   | Subagent-driven TDD orchestrating 17 atomic tasks; reviewer-turn subagent on diffs                                      | `uv run pytest` (65 tests at Task 16), `ruff`, `mypy`, reviewer-turn for silent hallucinations |
+| Coding (Web GUI)      | Claude Opus 4.7               | Web GUI spec + implementation plan; `/frontend-design` UX redesign pass                                                 | Adapter pytest suite + manual browser smoke test                                               |
+| Coding (Duo M2)       | Claude Opus 4.7               | Duo design + plan + execution via brainstorm → write-plan → execute-plan; Duo GUI guardrails                            | RED→GREEN per step; FastAPI `TestClient` probes of `/state`; full suite 180 passed             |
+| Coding (GUI gameplay) | OpenCode + GPT-5.5            | Move-safety remediation, hover preview, end-game table, `/piece-catalog`, `/reset`, CLI player count                    | `uv run pytest`, focused adapter tests, manual diff review                                     |
+| Maintenance           | Cursor 3.4.20                 | `pyproject.toml` migration to Hatchling; single args-based CLI entry point                                              | `uv sync && uv run blokus-engine --help`; CLI smoke                                            |
+| Code Review           | Gemini 3 Flash                | G3 (with/without authority-cue comments) on `rule_set.py`; G4 (persona + pseudocode + chain-of-thought) on `scoring.py` | Manual source-trace of every finding to separate real bugs from hallucinations                 |
+| Debugging             | OpenCode + GPT-5.5            | Explain-Then-Fix and AutoSD loops for turn-flow, CLI alignment, piece/orientation bugs                                  | Targeted pytest, endpoint smoke, static UI checks                                              |
+| Merge                 | OpenCode + GPT-5.5            | Staged-pipeline resolution of the GUI ↔ Duo branch conflict                                                             | `uv build`, full pytest (176 passed pre-Duo-tests), `git diff --cached --check`                |
 
 ### AI Usage Policy
 
-| Policy / Guideline             | Description                                                                                              | Application                                                                                              |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Disclosure via prompt logs     | Every AI-assisted session is captured in `prompts/<owner>_<task>.{json,md}` and committed alongside code | Visible in `OWNERSHIP.md` evidence column for every work package                                         |
-| Human review before commit     | No AI-generated diff is committed without a developer reading the full diff first                       | Used across Core/M1, Web GUI, Duo, debugging, and merge work (see Iven, Denis, Petar portfolios §4)      |
+| Policy / Guideline         | Description                                                                                              | Application                                                                                         |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Disclosure via prompt logs | Every AI-assisted session is captured in `prompts/<owner>_<task>.{json,md}` and committed alongside code | Visible in `OWNERSHIP.md` evidence column for every work package                                    |
+| Human review before commit | No AI-generated diff is committed without a developer reading the full diff first                        | Used across Core/M1, Web GUI, Duo, debugging, and merge work (see Iven, Denis, Petar portfolios §4) |
 
 ---
 
@@ -108,7 +108,7 @@ flowchart LR
 - **Configuration-as-data + Strategy seams** made Blokus Duo a no-fork extension: a new `scoring_rule` config value + `DuoScoring` strategy + threading `last_placed_piece` through the `Memento` — `Core` never references "Duo" by name.
 - **`AGENTS.md` minimal context file** propagated architectural invariants (no `Core.*`→adapter imports, no hard-coded `20`/`4`, Memento round-trip JSON-only) across 30+ commits without re-derivation.
 - **Reviewer-turn subagent on the diff** (not on the tests) caught silent hallucinations in `GameSession`, `Memento`, and `StateRepository` that all 45 author-supplied tests had passed (see Counterexample 1).
-- **Two-phase G3/G4 review** surfaced two real critical bugs: `is_first_move` unverified for players 2–4 in `check_legality`, and the inverted leaderboard in `DuoScoring.rank` from double-negation. __TODO!__
+- **Two-phase G3/G4 review** surfaced two real critical bugs: `is_first_move` unverified for players 2–4 in `check_legality`, and the inverted leaderboard in `DuoScoring.rank` from double-negation.
 - **Backend-frontend separation + a dedicated UX-reflection prompt** turned a functional-but-unplayable first GUI pass into a Swiss/editorial redesign in one round (`/frontend-design`).
 - **Persona-driven requirements** (Ethan, Priya, George) captured learnability/accessibility/save-load needs a purely technical brief would have missed.
 
@@ -123,9 +123,10 @@ flowchart LR
 
 ### Lessons Learned
 
-- Author-supplied tests are a *specification* to the LLM; they cannot also be the *validator*. A separate reviewer turn that consumes the diff plus FR IDs is the load-bearing step. __TODO!__
+- Author-supplied tests are a _specification_ to the LLM; they cannot also be the _validator_. A separate reviewer turn that consumes the diff plus FR IDs is the load-bearing step.
 - Constraints that are falsifiable by code must either become an executable tripwire (DR-1 literal scan in `CODING_PROMPT_v1`) or be deleted in the same PR that invalidates them — manual prose drifts within a single milestone.
-- Configuration-over-forking refunds its ADR cost at the next milestone: adding Duo cost data + one Strategy, not a parallel engine. __TODO! REWRITE__
+- Configuration-over-forking refunds its ADR cost at the next milestone: adding Duo cost data + one Strategy, not a parallel engine.
+- Feeding multiple documents or scopes into a single LLM session without specific boundary constraints can causes the model to lose focus. The false positive in the ambiguity detection exercise (AMB-03) would have been avoided entirely by scoping the prompt to one document at a time.
 - Multi-model routing by task type (MiniMax for planning/Core TDD, Claude Opus 4.7 for UX + Duo, OpenCode + GPT-5.5 for GUI gameplay/debugging, Cursor for single-file maintenance, Gemini Flash for review/UML) worked very well in team's experience because it allowed for leveraging each Models particular strengths.
 
 ---
@@ -140,7 +141,7 @@ flowchart LR
 2. **Counterexample 2:** `AGENTS.md goes stale — still claims "Duo out of scope" after Duo shipped`\
    **Link:** `deliverables/Portfolio_Denis.md` Counterexample 1; `AGENTS.md:9`, `AGENTS.md:21`; `prompts/denis_coding_duo_mode_gui.json`\
    **Guideline that Failed:** Topic 2 — Coding, Team 2 · G1 ("Context-Aware Grounding via Minimal Manual Documentation")\
-   **What Happened:** A hand-written constraint file is cheap to write and cheap to forget. After ≈17 Duo commits in a day, `AGENTS.md` still forbade Duo paths and described a Java/Maven *or* Python/uv build — an agent obeying it literally would have refused work already merged. Refinement: scope/constraint notes must be either expressed as tripwires or deleted in the same PR that invalidates them.
+   **What Happened:** A hand-written constraint file is cheap to write and cheap to forget. After ≈17 Duo commits in a day, `AGENTS.md` still forbade Duo paths and described a Java/Maven _or_ Python/uv build — an agent obeying it literally would have refused work already merged. Refinement: scope/constraint notes must be either expressed as tripwires or deleted in the same PR that invalidates them.
 
 3. **Counterexample 3:** `Broad remediation prompts led to over-refactoring and partially wired features`\
    **Link:** `deliverables/Portfolio_Petar.md` Counterexample 4; commits `e0755b4`, `5348e95`, `8b68253`; `prompts/petar_gui_refactor.json`\

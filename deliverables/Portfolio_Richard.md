@@ -18,9 +18,9 @@
 ### Package Name: `Design/Architecture Guideline 3: UML Specification (Co-owned with Denis Maxheimer)`
 
 **Description:**
-Applied a structured two-phase LLM workflow to generate and validate a Mermaid class
+I Applied a structured two-phase LLM workflow to generate and validate a Mermaid class
 diagram for the Blokus game engine core, enforcing hexagonal architecture boundaries
-and traceability to functional requirements. Note: the UML diagramms are based on the previoulsy created ADR.md (Guideline 1) from Dennis Maxheimer
+and traceability to functional requirements. Note: the UML diagramms are based on the previoulsy created ADR (Guideline 1) from Dennis Maxheimer
 
 **Responsibilities:**
 
