@@ -143,6 +143,10 @@ uv run python -m app
 uv run python -m app --gui
 ```
 
+## Team & Individual MD Files
+
+All relevant md files that are to be turned in and graded can be found in the _deliverables_ folder
+
 ## Tasks & Responsibilities
 
 - Requirements: All
